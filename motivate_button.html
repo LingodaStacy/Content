@@ -8,20 +8,12 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet"/>
   <style>
-    /* Volle weiße Fläche */
     html, body {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
-      background: #ffffff !important;
-    }
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      font-family: 'Open Sans', sans-serif;
+      background: #ffffff;
     }
     .app-wrapper {
       position: relative;
@@ -32,12 +24,9 @@
       align-items: center;
       background: #ffffff;
     }
-    /* Gradienten-Text, zunächst versteckt */
+    /* Nachricht versteckt */
     #messageDiv {
       position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
       display: none;
       white-space: nowrap;
       font-family: 'Luckiest Guy', cursive;
@@ -47,6 +36,7 @@
       -webkit-text-fill-color: transparent;
       text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
       pointer-events: none;
+      opacity: 0;
     }
     @keyframes popIn {
       0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
@@ -54,9 +44,10 @@
       100% { transform: translateX(-50%) scale(1); opacity: 1; }
     }
     #messageDiv.pop {
+      left: 50%;
       animation: popIn 0.4s ease-out forwards;
     }
-    /* Button */
+    /* Button ohne Verschiebung */
     #motivate {
       padding: 14px 28px;
       background: linear-gradient(145deg, #0000ff, #9900ff);
@@ -67,13 +58,8 @@
       font-size: 18px;
       font-weight: 600;
       cursor: pointer;
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
-    #motivate:active {
-      transform: translateY(4px);
-      box-shadow: 2px 2px 6px rgba(0,0,0,0.4), -2px -2px 6px rgba(255,255,255,0.2);
-    }
-    /* Vollformat-Canvas für Konfetti */
+    /* Confetti-Canvas */
     #confetti-canvas {
       position: fixed;
       top: 0;
@@ -93,26 +79,22 @@
   <canvas id="confetti-canvas"></canvas>
   <script>
     const canvas = document.getElementById('confetti-canvas');
-    const myConfetti = confetti.create(canvas, { resize: true });
-    const msgDiv = document.getElementById('messageDiv');
-    const btn = document.getElementById('motivate');
-    let firstPop = true;
-
-    btn.addEventListener('click', () => {
-      const rect = btn.getBoundingClientRect();
-      // Einmalige Anzeige mit Pop-In
-      if (firstPop) {
-        msgDiv.style.display = 'block';
-        // Position oberhalb Button: Höhe auslesen nun, nachdem sichtbar
-        const h = msgDiv.offsetHeight;
-        msgDiv.style.top = `${rect.top - h - 10}px`;
-        msgDiv.classList.add('pop');
-        firstPop = false;
+    const confettiInstance = confetti.create(canvas, { resize: true });
+    const message = document.getElementById('messageDiv');
+    const button = document.getElementById('motivate');
+    let popped = false;
+    button.addEventListener('click', () => {
+      const rect = button.getBoundingClientRect();
+      // Confetti
+      const cx = (rect.left + rect.width / 2) / window.innerWidth;
+      const cy = (rect.top + rect.height / 2) / window.innerHeight;
+      confettiInstance({ particleCount: 150, spread: 80, startVelocity: 60, origin: { x: cx, y: cy }, colors: ['#0000ff', '#9900ff', '#ff00ff'] });
+      // Pop-In einmalig
+      if (!popped) {
+        message.style.display = 'block';
+        message.classList.add('pop');
+        popped = true;
       }
-      // Konfetti-Explosion
-      const x = (rect.left + rect.width/2) / window.innerWidth;
-      const y = (rect.top + rect.height/2) / window.innerHeight;
-      myConfetti({ particleCount: 150, spread: 80, startVelocity: 60, origin: { x, y }, colors: ['#0000ff', '#9900ff', '#ff00ff'] });
     });
   </script>
 </body>

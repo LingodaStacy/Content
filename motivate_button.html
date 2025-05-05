@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" style="background: #ffffff !important;">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,14 +8,18 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet"/>
   <style>
+    html, body {
+      background: #ffffff !important;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+    }
     body {
       position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      margin: 0;
-      background: #ffffff; /* Weißer Hintergrund */
       font-family: 'Open Sans', sans-serif;
     }
     /* Gradient-Text verborgen und animierbar */
@@ -58,7 +62,7 @@
       transform: translateY(4px);
       box-shadow: 2px 2px 6px rgba(0,0,0,0.4), -2px -2px 6px rgba(255,255,255,0.2);
     }
-    /* Vollformat-Canvas für Konfetti */
+    /* Canvas fürs Konfetti */
     #confetti-canvas {
       position: fixed;
       top: 0;

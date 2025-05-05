@@ -4,10 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Motivations-Button</title>
-  <!-- Canvas-Confetti Bibliothek -->
+  <!-- Canvas-Confetti & Google Font -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet"/>
   <style>
     body {
+      position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -16,7 +18,30 @@
       background: #f5f5f5;
       font-family: 'Open Sans', sans-serif;
     }
-    /* Rechteckiger Button mit abgerundeten Ecken und 3D-Effekt */
+    /* Gradient-Text verborgen und animierbar */
+    #messageDiv {
+      position: absolute;
+      font-family: 'Luckiest Guy', cursive;
+      font-size: 48px;
+      background: linear-gradient(45deg, #0000ff, #9900ff, #ff00ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+      user-select: none;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    /* Pop-In Animation */
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    #messageDiv.pop {
+      animation: popIn 0.4s ease-out forwards;
+    }
+    /* Rechteckiger Button mit 3D-Effekt */
     #motivate {
       padding: 14px 28px;
       background: linear-gradient(145deg, #0000ff, #9900ff);
@@ -26,7 +51,6 @@
       box-shadow: 6px 6px 12px rgba(0,0,0,0.4), -6px -6px 12px rgba(255,255,255,0.2);
       font-size: 18px;
       font-weight: 600;
-      position: relative;
       transition: transform 0.1s ease, box-shadow 0.1s ease;
       cursor: pointer;
     }
@@ -34,7 +58,7 @@
       transform: translateY(4px);
       box-shadow: 2px 2px 6px rgba(0,0,0,0.4), -2px -2px 6px rgba(255,255,255,0.2);
     }
-    /* Vollformat-Canvas für Confetti */
+    /* Canvas fürs Konfetti */
     #confetti-canvas {
       position: fixed;
       top: 0;
@@ -47,18 +71,36 @@
   </style>
 </head>
 <body>
+  <!-- Text im Code editierbar -->
+  <div id="messageDiv">Herzlichen Glückwunsch!</div>
+
   <button id="motivate">Motivation!</button>
   <canvas id="confetti-canvas"></canvas>
+
   <script>
     const canvas = document.getElementById('confetti-canvas');
     const myConfetti = confetti.create(canvas, { resize: true });
-    document.getElementById('motivate').addEventListener('click', () => {
-      const btn = document.getElementById('motivate');
+    const msgDiv = document.getElementById('messageDiv');
+    const btn = document.getElementById('motivate');
+    let firstPop = true;
+
+    btn.addEventListener('click', () => {
       const rect = btn.getBoundingClientRect();
-      const x = (rect.left + rect.width / 2) / window.innerWidth;
-      const y = (rect.top + rect.height / 2) / window.innerHeight;
-      myConfetti({ particleCount: 100, spread: 90, startVelocity: 50, origin: { x, y }, colors: ['#0000ff', '#9900ff', '#ff00ff'] });
-      myConfetti({ particleCount: 40, spread: 120, startVelocity: 30, origin: { x, y }, colors: ['#0000ff', '#9900ff', '#ff00ff'] });
+      // Positioniere Text über Button
+      msgDiv.style.left = `${rect.left + rect.width/2 - msgDiv.offsetWidth/2}px`;
+      msgDiv.style.top  = `${rect.top - msgDiv.offsetHeight - 10}px`;
+      // Konfetti-Explosion
+      const x = (rect.left + rect.width/2) / window.innerWidth;
+      const y = (rect.top + rect.height/2) / window.innerHeight;
+      myConfetti({ particleCount: 150, spread: 80, startVelocity: 60, origin: { x, y }, colors: ['#0000ff', '#9900ff', '#ff00ff'] });
+      // Nachricht einmalig Pop-In anzeigen
+      if (firstPop) {
+        msgDiv.classList.add('pop');
+        msgDiv.style.opacity = '1';
+        firstPop = false;
+      } else {
+        msgDiv.style.opacity = '1';
+      }
     });
   </script>
 </body>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medizinisches Quiz</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .question { margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <h1>Medizinisches Quiz</h1>
+  <div class="question">
+    <p>Was bedeutet der Begriff "Anaphylaxie"?</p>
+    <label><input type="radio" name="q1" value="A"> A) Allergische Reaktion</label><br>
+    <label><input type="radio" name="q1" value="B"> B) Hoher Blutdruck</label><br>
+    <label><input type="radio" name="q1" value="C"> C) Herzinfarkt</label><br>
+    <button onclick="checkAnswer()">Antwort überprüfen</button>
+  </div>
+  <p id="feedback"></p>
+  
+  <script>
+    function checkAnswer() {
+      const answer = document.querySelector('input[name="q1"]:checked');
+      const feedback = document.getElementById("feedback");
+      if (answer) {
+        if (answer.value == "A") {
+          feedback.textContent = "Richtig! Anaphylaxie ist eine allergische Reaktion.";
+          feedback.style.color = "green";
+        } else {
+          feedback.textContent = "Leider falsch, versuche es noch einmal.";
+          feedback.style.color = "red";
+        }
+      } else {
+        feedback.textContent = "Bitte wähle eine Antwort.";
+        feedback.style.color = "orange";
+      }
+    }
+  </script>
+</body>
+</html>

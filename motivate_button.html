@@ -15,16 +15,14 @@
       height: 100%;
       background: #ffffff;
     }
-    .app-wrapper {
-      position: relative;
-      width: 100%;
-      height: 100%;
+    body {
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #ffffff;
+      position: relative;
+      font-family: 'Open Sans', sans-serif;
     }
-    /* Nachricht versteckt */
+    /* Nachricht als Gradient-Text, versteckt */
     #messageDiv {
       position: absolute;
       display: none;
@@ -39,15 +37,11 @@
       opacity: 0;
     }
     @keyframes popIn {
-      0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
-      70% { transform: translateX(-50%) scale(1.2); opacity: 1; }
-      100% { transform: translateX(-50%) scale(1); opacity: 1; }
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
     }
-    #messageDiv.pop {
-      left: 50%;
-      animation: popIn 0.4s ease-out forwards;
-    }
-    /* Button ohne Verschiebung */
+    /* Button */
     #motivate {
       padding: 14px 28px;
       background: linear-gradient(145deg, #0000ff, #9900ff);
@@ -58,8 +52,13 @@
       font-size: 18px;
       font-weight: 600;
       cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
-    /* Confetti-Canvas */
+    #motivate:active {
+      transform: translateY(4px);
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.4), -2px -2px 6px rgba(255,255,255,0.2);
+    }
+    /* Canvas fürs Konfetti */
     #confetti-canvas {
       position: fixed;
       top: 0;
@@ -72,28 +71,36 @@
   </style>
 </head>
 <body>
-  <div class="app-wrapper">
-    <div id="messageDiv">Herzlichen Glückwunsch!</div>
-    <button id="motivate">Motivation!</button>
-  </div>
+  <!-- Text im Code editierbar -->
+  <div id="messageDiv">Herzlichen Glückwunsch!</div>
+  <button id="motivate">Motivation!</button>
   <canvas id="confetti-canvas"></canvas>
   <script>
     const canvas = document.getElementById('confetti-canvas');
     const confettiInstance = confetti.create(canvas, { resize: true });
     const message = document.getElementById('messageDiv');
     const button = document.getElementById('motivate');
-    let popped = false;
+    let firstPop = true;
     button.addEventListener('click', () => {
       const rect = button.getBoundingClientRect();
-      // Confetti
-      const cx = (rect.left + rect.width / 2) / window.innerWidth;
-      const cy = (rect.top + rect.height / 2) / window.innerHeight;
-      confettiInstance({ particleCount: 150, spread: 80, startVelocity: 60, origin: { x: cx, y: cy }, colors: ['#0000ff', '#9900ff', '#ff00ff'] });
-      // Pop-In einmalig
-      if (!popped) {
+      // Konfetti
+      const x = (rect.left + rect.width/2) / window.innerWidth;
+      const y = (rect.top + rect.height/2) / window.innerHeight;
+      confettiInstance({ particleCount: 150, spread: 80, startVelocity: 60, origin: { x, y }, colors: ['#0000ff', '#9900ff', '#ff00ff'] });
+      if (firstPop) {
+        // Zeige Text und messe Größe
         message.style.display = 'block';
-        message.classList.add('pop');
-        popped = true;
+        // Force layout to get dimensions
+        void message.offsetWidth;
+        const w = message.offsetWidth;
+        const h = message.offsetHeight;
+        // Positioniere über Button
+        message.style.left = (rect.left + rect.width/2 - w/2) + 'px';
+        message.style.top  = (rect.top - h - 10) + 'px';
+        // Animieren
+        message.classList.add('popIn');
+        message.style.opacity = '1';
+        firstPop = false;
       }
     });
   </script>

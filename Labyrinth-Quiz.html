@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Labyrinth-Quiz: Fremdanamnese mit Tap-to-Move</title>
+  <style>
+    /* Grundlayout */
+    body, html {
+      margin:0; padding:0;
+      width:100%; height:100%;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      background:#fff; font-family:sans-serif;
+      overflow:hidden;
+    }
+    /* Avatar-Auswahl */
+    #avatarSelection {
+      position:fixed; inset:0;
+      background:rgba(255,255,255,0.95);
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      z-index:200;
+    }
+    #avatarSelection h2 { color:#0000ff; margin-bottom:20px; }
+    #optionsContainer { display:flex; gap:20px; }
+    .avatarOption {
+      width:80px; height:80px; padding:4px;
+      cursor:pointer;
+      border:3px solid transparent; border-radius:8px;
+      transition:border 0.2s; box-sizing:border-box;
+    }
+    .avatarOption:hover { border-color:#0000ff; }
+    .avatarOption svg { width:100%; height:100%; }
+
+    /* Spielfeld */
+    #maze {
+      display:none; margin-top:20px;
+      border:4px solid #0000ff; background:#fff;
+      display:grid;
+      grid-template-columns:repeat(6,50px);
+      grid-template-rows:repeat(6,50px);
+      gap:2px; position:relative;
+    }
+    #maze.active { display:grid; }
+    .cell {
+      width:50px; height:50px;
+      background:#fff; border:2px solid #0000ff;
+      box-sizing:border-box;
+    }
+    .wall { background:#333; }
+    .quiz { background:#ff00ff; }
+
+    /* Countdown unter dem Grid */
+    #countdown {
+      margin-top:10px;
+      font-size:1.2rem;
+      color:#0000ff;
+      font-weight:bold;
+    }
+
+    /* Quiz-Modal */
+    #quizModal {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,0.6);
+      display:flex; align-items:center; justify-content:center;
+      z-index:500;
+    }
+    #quizContent {
+      background:#fff; padding:20px; border-radius:8px;
+      max-width:360px; width:90%;
+      box-shadow:0 4px 10px rgba(0,0,0,0.3);
+      text-align:left;
+    }
+    #quizContent h2 { margin-top:0; color:#0000ff; }
+    .btn {
+      margin:8px 4px; padding:6px 12px;
+      background:#0000ff; color:#fff;
+      border:none; border-radius:4px; cursor:pointer;
+    }
+    #correctAnswer { margin-top:12px; font-weight:bold; display:none; }
+
+    /* Zeit-abgelaufen-Overlay */
+    #timeUpModal {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,0.7);
+      display:flex; align-items:center; justify-content:center;
+      z-index:600;
+    }
+    #timeUpContent {
+      background:#fff; padding:20px; border-radius:8px;
+      text-align:center;
+      box-shadow:0 4px 10px rgba(0,0,0,0.3);
+    }
+    #timeUpContent h2 {
+      margin:0 0 1rem; color:#000;
+    }
+    #retryButton {
+      background:#0000ff; color:#fff;
+      border:none; border-radius:4px;
+      padding:8px 16px; cursor:pointer;
+      font-size:1rem;
+    }
+
+    /* Avatar */
+    #avatar {
+      position:absolute; width:46px; height:46px;
+      top:2px; left:2px; z-index:1;
+    }
+    #avatar svg { width:100%; height:100%; }
+  </style>
+</head>
+<body>
+
+  <!-- 1) Avatar-Auswahl -->
+  <div id="avatarSelection">
+    <h2>Wähle dein Avatar</h2>
+    <div id="optionsContainer">
+      <!-- Roboter -->
+      <div class="avatarOption">
+        <svg viewBox="0 0 64 64">
+          <rect x="16" y="16" width="32" height="32" fill="#0000ff" rx="4"/>
+          <circle cx="24" cy="28" r="4" fill="#fff"/>
+          <circle cx="40" cy="28" r="4" fill="#fff"/>
+          <rect x="26" y="38" width="12" height="4" fill="#fff"/>
+        </svg>
+      </div>
+      <!-- Katze -->
+      <div class="avatarOption">
+        <svg viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="20" fill="#0000ff"/>
+          <polygon points="16,20 24,8 32,20" fill="#0000ff"/>
+          <polygon points="48,20 40,8 32,20" fill="#0000ff"/>
+          <circle cx="24" cy="32" r="4" fill="#fff"/>
+          <circle cx="40" cy="32" r="4" fill="#fff"/>
+          <path d="M28,44 Q32,48 36,44" stroke="#fff" stroke-width="2" fill="none"/>
+        </svg>
+      </div>
+      <!-- Hund -->
+      <div class="avatarOption">
+        <svg viewBox="0 0 64 64">
+          <circle cx="32" cy="36" r="18" fill="#0000ff"/>
+          <ellipse cx="16" cy="26" rx="6" ry="10" fill="#0000ff"/>
+          <ellipse cx="48" cy="26" rx="6" ry="10" fill="#0000ff"/>
+          <circle cx="24" cy="34" r="4" fill="#fff"/>
+          <circle cx="40" cy="34" r="4" fill="#fff"/>
+          <ellipse cx="32" cy="46" rx="8" ry="6" fill="#fff"/>
+          <circle cx="28" cy="44" r="2" fill="#0000ff"/>
+          <circle cx="36" cy="44" r="2" fill="#0000ff"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2) Labyrinth-Container -->
+  <div id="maze"></div>
+
+  <!-- 2.5) Countdown-Anzeige -->
+  <div id="countdown">03:00</div>
+
+  <!-- 3) Quiz-Modal -->
+  <div id="quizModal">
+    <div id="quizContent">
+      <h2 id="questionText"></h2>
+      <div id="answerButtons"></div>
+      <div id="correctAnswer"></div>
+      <button id="okButton" class="btn">Okay</button>
+    </div>
+  </div>
+
+  <!-- 2.6) Zeit abgelaufen-Modal -->
+  <div id="timeUpModal">
+    <div id="timeUpContent">
+      <h2>Schade, leider ist die Zeit abgelaufen</h2>
+      <button id="retryButton" class="btn">Noch einmal versuchen</button>
+    </div>
+  </div>
+
+  <!-- Confetti-Bibliothek -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+  <script>
+    // ----- Countdown-Logik -----
+    let countdownInterval, remainingSeconds = 180;
+    function formatCountdown(sec) {
+      const m = String(Math.floor(sec/60)).padStart(2,'0'),
+            s = String(sec%60).padStart(2,'0');
+      return `${m}:${s}`;
+    }
+    function startCountdown() {
+      remainingSeconds = 180;
+      document.getElementById('countdown').textContent = formatCountdown(remainingSeconds);
+      clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        remainingSeconds--;
+        document.getElementById('countdown').textContent = formatCountdown(remainingSeconds);
+        if (remainingSeconds <= 0) {
+          clearInterval(countdownInterval);
+          timeUp();
+        }
+      }, 1000);
+    }
+    function stopCountdown() {
+      clearInterval(countdownInterval);
+    }
+    function timeUp() {
+      document.getElementById('maze').classList.remove('active');
+      document.getElementById('quizModal').style.display = 'none';
+      document.getElementById('timeUpModal').style.display = 'flex';
+    }
+
+    // ----- Confetti-Helper -----
+    function launchConfetti() {
+      ['#0000ff','#9900ff','#ff00ff'].forEach(col=>{
+        confetti({ particleCount:100, spread:160, origin:{y:0.6}, colors:[col] });
+      });
+    }
+
+    // ----- Spiel-Setup -----
+    document.addEventListener('DOMContentLoaded', ()=>{
+      document.getElementById('quizModal').style.display = 'none';
+      document.getElementById('timeUpModal').style.display = 'none';
+    });
+
+    function shuffle(arr){ return arr.sort(()=>Math.random()-0.5); }
+
+
+    let quizzes = [
+  {
+    q: "Die Fremdanamnese ist immer die erste Wahl bei der Erhebung der Krankengeschichte.",
+    a: false,
+    correctMsg: "Falsch – sie ist nur nötig, wenn der Patient nicht selbst Auskunft geben kann.",
+    followUp: {
+      q2: "Warum ist sie nicht immer erste Wahl?",
+      options: [
+        { text: "Weil der Patient oft selbst Auskunft geben kann", correct: true },
+        { text: "Weil sie immer ungenau ist",               correct: false },
+        { text: "Weil sie sehr teuer ist",                   correct: false },
+        { text: "Weil sie gesetzlich verboten ist",          correct: false }
+      ]
+    }
+  },
+  {
+    q: "Auch Pflegekräfte können Gesprächspartner für die Fremdanamnese sein.",
+    a: true,
+    correctMsg: "Richtig – Pflegekräfte haben oft relevante Informationen.",
+    followUp: {
+      q2: "Warum sind Pflegekräfte geeignet?",
+      options: [
+        { text: "Sie kennen den Patienten aus der Pflege", correct: true },
+        { text: "Sie sind gesetzlich verpflichtet",        correct: false },
+        { text: "Sie sind Familienmitglieder",             correct: false },
+        { text: "Sie haben Schweigepflicht",               correct: false }
+      ]
+    }
+  },
+  {
+    q: "Die Fremdanamnese basiert auf objektiven Fakten.",
+    a: false,
+    correctMsg: "Falsch – sie basiert auf subjektiven Einschätzungen.",
+    followUp: {
+      q2: "Worauf basiert sie hauptsächlich?",
+      options: [
+        { text: "Subjektive Einschätzungen Dritter", correct: true },
+        { text: "Laborwerte",                       correct: false },
+        { text: "Bildgebende Verfahren",            correct: false },
+        { text: "Arztbriefe",                       correct: false }
+      ]
+    }
+  },
+  {
+    q: "Bei bewusstlosen Patienten darf keine Fremdanamnese durchgeführt werden.",
+    a: false,
+    correctMsg: "Falsch – der mutmaßliche Wille erlaubt sie bei Bewusstlosigkeit.",
+    followUp: {
+      q2: "Worauf stützt sie sich dann?",
+      options: [
+        { text: "Mutmaßlicher Wille",      correct: true },
+        { text: "Schweigepflicht",        correct: false },
+        { text: "Rettungsdienst-Vorgabe", correct: false },
+        { text: "Einwilligung der Pflege", correct: false }
+      ]
+    }
+  },
+  {
+    q: "Ziel der Fremdanamnese ist es, relevante Angaben zu erheben.",
+    a: true,
+    correctMsg: "Richtig – genau das ist das Ziel.",
+    followUp: {
+      q2: "Welcher Aspekt gehört NICHT dazu?",
+      options: [
+        { text: "Familienstand",          correct: true },
+        { text: "Medikationen",           correct: false },
+        { text: "Allergien",              correct: false },
+        { text: "Psychosoziale Faktoren", correct: false }
+      ]
+    }
+  }
+ ];
+
+
+    shuffle(quizzes);
+    // Anzahl der Zeilen und Spalten
+const rows = 6, cols = 6;
+
+// Leeres Spielfeld initialisieren (nur Nullen)
+const layout = Array.from({ length: rows }, () => Array(cols).fill(0));
+
+// So viele Quiz-Felder setzen, wie es Fragen gibt
+let remainingQs = quizzes.length;
+while (remainingQs > 0) {
+  const y = Math.floor(Math.random() * rows);
+  const x = Math.floor(Math.random() * cols);
+  if (layout[y][x] === 0) {
+    layout[y][x] = 'Q';
+    remainingQs--;
+  }
+}
+    const quizMap = {};
+    layout.forEach((row,y)=>
+      row.forEach((c,x)=>{
+        if(c==='Q') quizMap[`${y},${x}`] = quizzes.shift();
+      })
+    );
+
+    const maze   = document.getElementById('maze'),
+          modal  = document.getElementById('quizModal'),
+          qText  = document.getElementById('questionText'),
+          ansDiv = document.getElementById('answerButtons'),
+          corrEl = document.getElementById('correctAnswer'),
+          okBtn  = document.getElementById('okButton'),
+          retry  = document.getElementById('retryButton');
+
+    let chosenSVG='', pos={x:0,y:0};
+
+    // Avatar-Auswahl
+    document.querySelectorAll('.avatarOption').forEach(opt=>{
+      opt.addEventListener('click', ()=>{
+        chosenSVG = opt.innerHTML;
+        document.getElementById('avatarSelection').style.display='none';
+        initGame();
+      });
+    });
+
+    // Spielstart
+    function initGame(){
+      modal.style.display='none';
+      document.getElementById('timeUpModal').style.display='none';
+      pos={x:0,y:0};
+      maze.innerHTML=''; maze.classList.add('active');
+
+      for(let y=0; y<6; y++){
+        for(let x=0; x<6; x++){
+          const cell = document.createElement('div');
+          cell.className='cell';
+          cell.dataset.x = x;
+          cell.dataset.y = y;
+          if(layout[y][x]===1)      cell.classList.add('wall');
+          else if(layout[y][x]==='Q')cell.classList.add('quiz');
+
+          cell.addEventListener('click', function(){
+            const cx = +this.dataset.x, cy = +this.dataset.y;
+            if(layout[cy][cx]===1) return;
+            pos = {x:cx,y:cy};
+            const av=document.getElementById('avatar');
+            av.style.left = `${cx*52+2}px`;
+            av.style.top  = `${cy*52+2}px`;
+            if(this.classList.contains('quiz')){
+              const quiz = quizMap[`${cy},${cx}`];
+              if(quiz) openQuiz(quiz,`${cy},${cx}`);
+            }
+          });
+
+          maze.appendChild(cell);
+        }
+      }
+
+      // Avatar platzieren
+      const avatar = document.createElement('div');
+      avatar.id='avatar';
+      avatar.innerHTML=chosenSVG;
+      maze.appendChild(avatar);
+
+      startCountdown();  // Countdown starten
+    }
+
+    // True/False-Stage
+    window.openQuiz=(quiz,key)=>{
+      qText.textContent=quiz.q;
+      corrEl.style.display='none';
+      okBtn.style.display='none';
+      ansDiv.innerHTML='';
+      ['Richtig','Falsch'].forEach(label=>{
+        const b=document.createElement('button');
+        b.className='btn'; b.textContent=label;
+        b.onclick=()=>{
+          ansDiv.innerHTML='';
+          const ok=(label==='Richtig')===quiz.a;
+          corrEl.textContent=ok?'Richtig!':quiz.correctMsg;
+          corrEl.style.color=ok?'#007700':'#aa0000';
+          corrEl.style.display='block';
+          if(ok) setTimeout(()=>showMC(quiz,key),1000);
+          else{
+            removeField(key);
+            okBtn.style.display='inline-block';
+            okBtn.onclick=()=>{
+              corrEl.style.display='none';
+              okBtn.style.display='none';
+              showMC(quiz,key);
+            };
+          }
+        };
+        ansDiv.appendChild(b);
+      });
+      modal.style.display='flex';
+    };
+
+    // MC-Stage mit Countdown-Stopp & Confetti
+    function showMC(quiz,key){
+      corrEl.style.display='none';
+      okBtn.style.display='none';
+      qText.textContent=quiz.followUp.q2;
+      ansDiv.innerHTML='';
+      shuffle(quiz.followUp.options.slice()).forEach(opt=>{
+        const b=document.createElement('button');
+        b.className='btn'; b.textContent=opt.text;
+        b.onclick=()=>{
+          ansDiv.innerHTML='';
+          if(opt.correct){
+            corrEl.textContent='Gut erklärt!';
+            corrEl.style.color='#007700';
+            corrEl.style.display='block';
+            removeField(key);
+            okBtn.style.display='inline-block';
+            okBtn.onclick=()=>{
+              modal.style.display='none';
+              if(Object.keys(quizMap).length===0){
+                stopCountdown();
+                launchConfetti();
+              }
+            };
+          } else {
+            corrEl.textContent='Versuch es noch einmal!';
+            corrEl.style.color='#aa0000';
+            corrEl.style.display='block';
+            okBtn.style.display='inline-block';
+            okBtn.onclick=()=>{
+              corrEl.style.display='none';
+              okBtn.style.display='none';
+              showMC(quiz,key);
+            };
+          }
+        };
+        ansDiv.appendChild(b);
+      });
+    }
+
+    function removeField(key){
+      const [ry,rx] = key.split(',').map(Number);
+      layout[ry][rx]=0;
+      delete quizMap[key];
+      document.querySelector(`.cell[data-x="${rx}"][data-y="${ry}"]`)
+              .classList.remove('quiz');
+    }
+
+    // Retry-Button
+    retry.addEventListener('click', ()=>location.reload());
+  </script>
+</body>
+</html>

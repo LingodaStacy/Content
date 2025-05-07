@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Audio–Audio-Matching mit Neustart</title>
+  <title>Audio–Audio-Matching mit Google Drive</title>
   <style>
     body {
       font-family: sans-serif;
@@ -82,21 +82,22 @@
   <button id="restart">Noch einmal spielen</button>
 
   <script>
-    // 1) Daten mit 2 Audios pro Paar — Drive mit export=media, GitHub per raw.githubusercontent
+    // 1) Paare mit Google-Drive-Links (export=media)
     const pairs = [
       {
         term: "Biopsie",
-        audioLeft:  "https://drive.google.com/uc?export=media&id=1HJh-g_ej-dKvaXnVe4KMYjcLgPQbGj23",
+        audioLeft:  "https://drive.google.com/uc?export=media&id=1pPtvev7qmSzV1pjhnVmjKMW2pqvuOX4V",
         audioRight: "https://drive.google.com/uc?export=media&id=1pPtvev7qmSzV1pjhnVmjKMW2pqvuOX4V"
       },
       {
         term: "Degeneration",
-        audioLeft:  "https://raw.githubusercontent.com/LingodaStacy/Content/main/Degeneration.m4a",
-        audioRight: "https://raw.githubusercontent.com/LingodaStacy/Content/main/Definition_Degen.m4a"
+        audioLeft:  "https://drive.google.com/uc?export=media&id=1XYZabcDEFghiJKLmnoPQRstuVWXYZ12",
+        audioRight: "https://drive.google.com/uc?export=media&id=1XYZabcDEFghiJKLmnoPQRstuVWXYZ12"
       }
+      // füge hier weitere Paare hinzu
     ];
 
-    // Shuffle-Helper
+    // Shuffle-Funktion
     function shuffle(a) {
       for (let i = a.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -105,12 +106,12 @@
       return a;
     }
 
-    // DOM-Referenzen
+    // DOM-References
     const list1      = document.getElementById('audioList');
     const list2      = document.getElementById('audioList2');
     const restartBtn = document.getElementById('restart');
 
-    // Spiel initialisieren / neu starten
+    // Spiel initialisieren
     function initGame() {
       list1.innerHTML = '';
       list2.innerHTML = '';
@@ -126,7 +127,7 @@
         el.dataset.term = item.term;
         el.innerHTML    = '🔊';
 
-        // Klick/Touch = Audio abspielen
+        // Klick/Touch spielt audioLeft ab
         el.addEventListener('click', () => {
           const audio = new Audio(item.audioLeft);
           audio.crossOrigin = 'anonymous';
@@ -152,33 +153,32 @@
         el.dataset.term = item.term;
         el.innerHTML    = '🔊';
 
-        // Klick/Touch = Audio abspielen
+        // Klick/Touch spielt audioRight ab
         el.addEventListener('click', () => {
           const audio = new Audio(item.audioRight);
           audio.crossOrigin = 'anonymous';
           audio.play().catch(console.error);
         });
 
-        // Drag-Over
+        // Drag-Over / Leave
         el.addEventListener('dragover', e => {
           e.preventDefault();
           if (!el.classList.contains('matched')) el.classList.add('over');
         });
         el.addEventListener('dragleave', () => el.classList.remove('over'));
 
-        // Drop
+        // Drop-Handler
         el.addEventListener('drop', e => {
           e.preventDefault();
           el.classList.remove('over');
-          const dragged = e.dataTransfer.getData('text/plain');
-          const srcEl   = [...list1.children].find(a => a.dataset.term === dragged);
-
-          if (dragged === item.term) {
-            // Richtig
+          const term = e.dataTransfer.getData('text/plain');
+          const srcEl = [...list1.children].find(c => c.dataset.term === term);
+          if (term === item.term) {
+            // korrekt
             el.classList.add('matched');
             srcEl.classList.add('matched');
           } else {
-            // Falsch: Shake
+            // falsch: Shake
             srcEl.classList.add('wrong');
             setTimeout(() => srcEl.classList.remove('wrong'), 300);
           }
@@ -191,8 +191,9 @@
     // Neustart-Button
     restartBtn.addEventListener('click', initGame);
 
-    // Erstes Laden
+    // Starte Spiel
     initGame();
   </script>
+
 </body>
 </html>

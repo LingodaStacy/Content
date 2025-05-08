@@ -5,14 +5,22 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Bild–Audio-Matching (5×5-Anordnung)</title>
   <style>
+    /* ===== Hintergrund auf Weiß setzen ===== */
+    html, body {
+      background-color: #ffffff !important;
+      margin: 0;
+      padding: 20px;   /* optionaler Innenabstand */
+    }
+
     body {
       font-family: sans-serif;
-      padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      background: #f9f9f9;
+      overflow-x: hidden;
     }
+
+    /* Gesamt-Wrapper, Bilder oben, Audios unten */
     .game-wrapper {
       display: flex;
       flex-direction: column;
@@ -20,9 +28,10 @@
       max-width: 800px;
       width: 100%;
     }
+
+    /* Flexible 5-Spalten-Anordnung, passt sich an */
     .image-row, .audio-row {
       display: grid;
-      /* dynamische Spaltenanzahl, min. 120px pro Kasten */
       grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 10px;
     }
@@ -32,6 +41,7 @@
       }
     }
 
+    /* ===== Dragbare Bilder ===== */
     .image-item {
       display: flex;
       align-items: center;
@@ -42,7 +52,6 @@
       cursor: grab;
       user-select: none;
       overflow: hidden;
-      /* quadratisch */
       aspect-ratio: 1 / 1;
     }
     .image-item img {
@@ -50,6 +59,7 @@
       max-height: 100%;
     }
 
+    /* ===== Audio-Drop-Zonen ===== */
     .audio-target {
       display: flex;
       align-items: center;
@@ -60,7 +70,6 @@
       font-size: 32px;
       border-radius: 8px;
       user-select: none;
-      /* breiteres Rechteck */
       aspect-ratio: 2.5 / 1;
     }
     .audio-target.over {
@@ -68,15 +77,17 @@
       border-color: #ff00ff;
     }
 
+    /* ===== Falscher Drop: Shake ===== */
     .image-item.wrong {
       animation: shake 0.3s;
     }
     @keyframes shake {
-      0%,100%   { transform: translateX(0) }
-      20%,60%   { transform: translateX(-5px) }
-      40%,80%   { transform: translateX(5px) }
+      0%,100% { transform: translateX(0); }
+      20%,60% { transform: translateX(-5px); }
+      40%,80% { transform: translateX(5px); }
     }
 
+    /* ===== Gematchte Paare: Lila ===== */
     .image-item.matched,
     .audio-target.matched {
       background: #9900ff;
@@ -84,6 +95,7 @@
       cursor: default;
     }
 
+    /* ===== Neustart-Button ===== */
     #restart {
       margin-top: 20px;
       padding: 10px 20px;
@@ -111,7 +123,6 @@
   </div>
 
   <script>
-    // Deine Paare: term + Bild + Audio
     const pairs = [
       { term:"Arm",   image:"https://raw.githubusercontent.com/LingodaStacy/Content/main/arm.jpg",   audio:"https://raw.githubusercontent.com/LingodaStacy/Content/main/arm.mp3" },
       { term:"Herz",  image:"https://raw.githubusercontent.com/LingodaStacy/Content/main/herz.png",  audio:"https://raw.githubusercontent.com/LingodaStacy/Content/main/herz.mp3" },
@@ -119,7 +130,6 @@
       { term:"Lunge", image:"https://raw.githubusercontent.com/LingodaStacy/Content/main/lunge.jpg", audio:"https://raw.githubusercontent.com/LingodaStacy/Content/main/lunge.mp3" }
     ];
 
-    // Shuffle-Helper
     function shuffle(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -139,7 +149,6 @@
       const imgs = shuffle(pairs.map(p => ({...p})));
       const auds = shuffle(pairs.map(p => ({...p})));
 
-      // Bilder erzeugen
       imgs.forEach(item => {
         const el = document.createElement('div');
         el.className = 'image-item';
@@ -158,16 +167,13 @@
         imageList.appendChild(el);
       });
 
-      // Audio-Zonen erzeugen
       auds.forEach(item => {
         const el = document.createElement('div');
         el.className = 'audio-target';
         el.dataset.term = item.term;
         el.innerHTML = '🔊';
 
-        el.addEventListener('click', () => {
-          new Audio(item.audio).play();
-        });
+        el.addEventListener('click', () => new Audio(item.audio).play());
         el.addEventListener('dragover', e => {
           e.preventDefault();
           if (!el.classList.contains('matched')) el.classList.add('over');
@@ -177,8 +183,7 @@
           e.preventDefault();
           el.classList.remove('over');
           const dragged = e.dataTransfer.getData('text/plain');
-          const imgEl = [...imageList.children]
-                        .find(c => c.dataset.term === dragged);
+          const imgEl = [...imageList.children].find(c => c.dataset.term === dragged);
           if (dragged === item.term) {
             el.classList.add('matched');
             imgEl.classList.add('matched');

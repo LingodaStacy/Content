@@ -22,6 +22,7 @@
     }
     .image-row, .audio-row {
       display: grid;
+      /* dynamische Spaltenanzahl, min. 120px pro Kasten */
       grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 10px;
     }
@@ -41,6 +42,7 @@
       cursor: grab;
       user-select: none;
       overflow: hidden;
+      /* quadratisch */
       aspect-ratio: 1 / 1;
     }
     .image-item img {
@@ -58,12 +60,14 @@
       font-size: 32px;
       border-radius: 8px;
       user-select: none;
+      /* breiteres Rechteck */
       aspect-ratio: 2.5 / 1;
     }
     .audio-target.over {
       background: #ff00ff;
       border-color: #ff00ff;
     }
+
     .image-item.wrong {
       animation: shake 0.3s;
     }
@@ -72,6 +76,7 @@
       20%,60%   { transform: translateX(-5px) }
       40%,80%   { transform: translateX(5px) }
     }
+
     .image-item.matched,
     .audio-target.matched {
       background: #9900ff;
@@ -98,12 +103,15 @@
 <body>
 
   <div class="game-wrapper">
+    <!-- Reihe 1: Bilder -->
     <div class="image-row" id="imageList"></div>
+    <!-- Reihe 2: Audios -->
     <div class="audio-row" id="audioList"></div>
     <button id="restart">Noch einmal spielen</button>
   </div>
 
   <script>
+    // Deine Paare: term + Bild + Audio
     const pairs = [
       { term:"Arm",   image:"https://raw.githubusercontent.com/LingodaStacy/Content/main/arm.jpg",   audio:"https://raw.githubusercontent.com/LingodaStacy/Content/main/arm.mp3" },
       { term:"Herz",  image:"https://raw.githubusercontent.com/LingodaStacy/Content/main/herz.png",  audio:"https://raw.githubusercontent.com/LingodaStacy/Content/main/herz.mp3" },
@@ -111,6 +119,7 @@
       { term:"Lunge", image:"https://raw.githubusercontent.com/LingodaStacy/Content/main/lunge.jpg", audio:"https://raw.githubusercontent.com/LingodaStacy/Content/main/lunge.mp3" }
     ];
 
+    // Shuffle-Helper
     function shuffle(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -130,6 +139,7 @@
       const imgs = shuffle(pairs.map(p => ({...p})));
       const auds = shuffle(pairs.map(p => ({...p})));
 
+      // Bilder erzeugen
       imgs.forEach(item => {
         const el = document.createElement('div');
         el.className = 'image-item';
@@ -141,16 +151,14 @@
         el.appendChild(img);
 
         el.addEventListener('dragstart', e => {
-          if (el.classList.contains('matched')) {
-            e.preventDefault();
-            return;
-          }
+          if (el.classList.contains('matched')) { e.preventDefault(); return; }
           e.dataTransfer.setData('text/plain', item.term);
         });
 
         imageList.appendChild(el);
       });
 
+      // Audio-Zonen erzeugen
       auds.forEach(item => {
         const el = document.createElement('div');
         el.className = 'audio-target';
@@ -165,7 +173,6 @@
           if (!el.classList.contains('matched')) el.classList.add('over');
         });
         el.addEventListener('dragleave', () => el.classList.remove('over'));
-
         el.addEventListener('drop', e => {
           e.preventDefault();
           el.classList.remove('over');

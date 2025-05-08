@@ -12,12 +12,6 @@
       padding: 2em;
       background: #fff;
     }
-    /* Header Bereich weiß hinterlegen */
-    h1 {
-      background-color: #fff;
-      padding: 0.5em;
-      margin-bottom: 1em;
-    }
     .sentence-container {
       margin-bottom: 2em;
       padding: 1em;
@@ -42,7 +36,7 @@
       flex-wrap: wrap;
       gap: 0.5em;
     }
-    /* Drop-Feld ohne Umrandung, stattdessen Unterstreichung */
+    /* Drop-Feld nur Unterstreichung */
     ul.target {
       border: none;
       border-bottom: 2px solid #153BFF;
@@ -57,29 +51,34 @@
       user-select: none;
       text-align: center;
     }
-    li:active {
-      cursor: grabbing;
+    li:active { cursor: grabbing; }
+    .action {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5em;
+      margin-top: 0.5em;
     }
     button.check {
       padding: 0.5em 1em;
       font-size: 1em;
-      margin-top: 0.5em;
       background: #153BFF;
       color: #fff;
       border: none;
       border-radius: 4px;
       cursor: pointer;
     }
-    p.result {
-      margin: 0.5em 0 0;
+    .result {
+      display: inline-block;
+      min-width: 150px;
       font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>Ordne die Sätze</h1>
   <div id="game"></div>
 
+  <!-- SortableJS für Maus & Touch -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script>
     const sentences = [
       ["Der Hund", "läuft", "schnell", "über", "die Wiese"],
@@ -110,59 +109,49 @@
       orig.className = "original";
       orig.textContent = "Originalsatz: " + originalArr.join(" ");
 
-      const pool = document.createElement("ul");
-      pool.className = "pool";
-      const target = document.createElement("ul");
-      target.className = "target";
+      const pool = document.createElement("ul"); pool.className = "pool";
+      const target = document.createElement("ul"); target.className = "target";
+      const btn = document.createElement("button"); btn.className = "check"; btn.textContent = "Prüfen";
+      const res = document.createElement("span"); res.className = "result";
+      const action = document.createElement("div"); action.className = "action";
+      action.append(btn, res);
 
-      const btn = document.createElement("button");
-      btn.className = "check";
-      btn.textContent = "Prüfen";
-      const res = document.createElement("p");
-      res.className = "result";
-
-      cont.append(title, orig, pool, target, btn, res);
+      cont.append(title, orig, pool, target, action);
       gameEl.appendChild(cont);
+
+      let sortablePool, sortableTarget;
 
       function load() {
         res.textContent = "";
         pool.innerHTML = "";
         target.innerHTML = "";
-
+        // Teile zufällig anordnen
         const scrambled = shuffle(originalArr);
         scrambled.forEach((text, pi) => {
           const li = document.createElement("li");
           li.textContent = text;
           li.id = `s${si}-p${pi}`;
-          li.draggable = true;
-          li.addEventListener("dragstart", e => {
-            e.dataTransfer.setData("text/plain", li.id);
-          });
           pool.appendChild(li);
         });
+        // (Re)initialisiere Sortables nach Neu-Laden
+        if (sortablePool) sortablePool.destroy();
+        if (sortableTarget) sortableTarget.destroy();
+        enableDrag();
       }
 
-      function getDropIndex(container, x) {
-        const children = Array.from(container.children);
-        for (let i = 0; i < children.length; i++) {
-          const rect = children[i].getBoundingClientRect();
-          if (x < rect.left + rect.width / 2) return i;
-        }
-        return children.length;
-      }
-
-      [pool, target].forEach(zone => {
-        zone.addEventListener("dragover", e => e.preventDefault());
-        zone.addEventListener("drop", e => {
-          e.preventDefault();
-          const id = e.dataTransfer.getData("text/plain");
-          const item = document.getElementById(id);
-          const dropX = e.clientX;
-          const idx = getDropIndex(zone, dropX);
-          if (idx >= zone.children.length) zone.appendChild(item);
-          else zone.insertBefore(item, zone.children[idx]);
+      function enableDrag() {
+        // Pool: verschieben (kein Cloning), kein Put von außen, kein internes Sortieren
+        sortablePool = Sortable.create(pool, {
+          group: { name: 'shared', pull: true, put: false },
+          sort: false,
+          animation: 150
         });
-      });
+        // Target: Items aufnehmen und sortieren
+        sortableTarget = Sortable.create(target, {
+          group: 'shared',
+          animation: 150
+        });
+      }
 
       btn.addEventListener("click", () => {
         const userOrder = Array.from(target.children).map(li => li.textContent);
@@ -175,11 +164,10 @@
         if (correct) {
           res.textContent = "🎉 Richtig! Gut gemacht.";
           res.style.color = "green";
-          Array.from(target.children).forEach(li => {
-            li.style.background = "#FF33CC";
-            li.draggable = false;
-            li.style.cursor = "default";
-          });
+          // Deaktiviere Drag und färbe pink
+          sortablePool.option('disabled', true);
+          sortableTarget.option('disabled', true);
+          target.querySelectorAll('li').forEach(li => li.style.background = "#FF33CC");
         } else {
           res.textContent = "❌ Leider falsch. Teile springen in 2 Sek. zurück.";
           res.style.color = "red";

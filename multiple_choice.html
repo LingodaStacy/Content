@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="de" style="background: transparent !important; border: none !important;">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flip-Quiz: 9 Interaktive Karten</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    /* (Styles bleiben unverändert – wie vorher) */
+    html, body, iframe { background: transparent !important; border: none !important; box-shadow: none !important; margin: 0; padding: 0; }
+    body { font-family: 'Open Sans', sans-serif; padding: 20px; }
+    .game-wrapper { width:100%; max-width:660px; margin:0 auto; }
+    .memory-game { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+    .card { width:100%; height:200px; perspective:1000px; cursor:pointer; position:relative; }
+    .card-inner { width:100%; height:100%; position:relative; transition:transform 0.6s; transform-style:preserve-3d; text-align:left; }
+    .card.flipped .card-inner { transform:rotateY(180deg); }
+    .card-front, .card-back {
+      position:absolute; width:100%; height:100%;
+      backface-visibility:hidden; border-radius:8px;
+      display:flex; justify-content:center; align-items:center;
+      padding:8px; box-sizing:border-box; user-select:none;
+    }
+    .card-front { background:#0000ff; color:#fff; font-size:18px; font-weight:600; }
+    .card-back {
+      background:#fff; color:#000; transform:rotateY(180deg);
+      overflow-y:auto; font-size:14px; line-height:1.4;
+      display:flex; flex-direction:column; justify-content:flex-start; align-items:flex-start;
+    }
+    .card.flipped:not(.mismatch):not(.matched) .card-back { border:2px solid #0000ff; }
+    .card.matched .card-back { background:#ff00ff; color:#fff; border:none; }
+    @keyframes shake-180 {
+      0%,100%   { transform:rotateY(180deg) translateX(0); }
+      20%,60%   { transform:rotateY(180deg) translateX(-10px); }
+      40%,80%   { transform:rotateY(180deg) translateX(10px); }
+    }
+    .card.flipped.mismatch .card-back { background:#ff0000; color:#fff; border:none; }
+    .card.flipped.mismatch .card-inner { animation:shake-180 0.6s; }
+    #restart { display:block; margin:0 auto; padding:8px 16px; font-size:14px; background:#0000ff; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+    #restart:hover { opacity:0.9; }
+    @media(max-width:600px){
+      .memory-game{grid-template-columns:repeat(2,1fr);}
+      .game-wrapper{max-width:100%;}
+    }
+    .question{font-weight:600; margin-bottom:0.4rem;}
+    .options label{display:flex; align-items:center; margin:0.3rem 0; cursor:pointer;}
+    .option-letter { font-weight:600; margin-right:0.5em; }
+    .option-text { flex:1; }
+    .modal{position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center; z-index:10;}
+    .modal-content{background:#fff; padding:20px; border-radius:8px; max-width:400px; width:90%; display:flex; flex-direction:column;}
+    .modal-content button{margin-top:1rem; padding:8px 12px; background:#0000ff; color:#fff; border:none; border-radius:4px; cursor:pointer; align-self:flex-end;}
+  </style>
+</head>
+<body>
+  <div class="game-wrapper">
+    <div class="memory-game" id="game"></div>
+    <button id="restart">Noch einmal spielen!</button>
+  </div>
+
+  <div class="modal" id="popup">
+    <div class="modal-content" id="popup-content"></div>
+  </div>
+
+  <script>
+    // Mischt nur die Antwort-Texte, behält A-D fest in Position
+    function shuffleOptions(container) {
+      const labels = Array.from(container.querySelectorAll('label'));
+      const texts = labels.map(lbl => lbl.dataset.text)
+                          .sort(() => Math.random() - 0.5);
+      labels.forEach((lbl, idx) => {
+        const text = texts[idx];
+        lbl.dataset.text = text;
+        lbl.querySelector('.option-text').textContent = text;
+        const letter = String.fromCharCode(65 + idx) + ')';
+        lbl.querySelector('.option-letter').textContent = letter;
+        lbl.querySelector('input').value = letter.charAt(0);
+      });
+    }
+
+    // Dummy-Daten: correct = exakter Text der richtigen Antwort
+    const cardsData = [
+      {
+        q: 'q1',
+        text: 'Die Fremdanamnese ist immer die erste Wahl bei der Erhebung der Krankengeschichte.',
+        opts: ['Richtig','Falsch',],
+        correct: 'Falsch',
+        extra: {
+          question: 'Warum ist sie nicht immer erste Wahl?',
+          opts: ['Der Patient kann oft selbst Auskunft geben.','Sie ist immer ungenau und daher unnütz.','Sie kann auf Dauer sehr teuer werden.','Sie ist gesetzlich nicht klar definiert.'],
+          correct: 'Der Patient kann oft selbst Auskunft geben.'
+        }
+      },
+      {
+        q: 'q2',
+        text: 'Auch Pflegekräfte können Gesprächspartner für die Fremdanamnese sein.',
+        opts: ['Richtig','Falsch',],
+        correct: 'Richtig',
+        extra: {
+          question: 'Warum sind auch Pflegekräfte geeignet?',
+          opts: ['Sie sind gesetzlich verpflichtet, Auskunft zu geben.','Sie sind wie Familienmitglieder.','Sie haben keine Schweigepflicht.','Sie kennen den Patienten aus der Pflege.'],
+          correct: 'Sie kennen den Patienten aus der Pflege.'
+        }
+      },
+      {
+        q: 'q3',
+        text: 'Die Fremdanamnese basiert auf objektiven Fakten.',
+        opts: ['Richtig','Falsch',],
+        correct: 'Falsch',
+        extra: {
+          question: 'Worauf basiert sie hauptsächlich?',
+          opts: ['Sie basiert auf den Ergebnissen der Laborwerte.','Sie basiert auf subjektiven Einschätzungen Dritter.','Sie basiert auf bildgebenden Verfahren wie Röntgen.','Sie basiert auf den Arztbriefen des medizinischen Personals.'],
+          correct: 'Sie basiert auf subjektiven Einschätzungen Dritter.'
+        }
+      },
+      {
+        q: 'q4',
+        text: 'Bei bewusstlosen Patienten darf keine Fremdanamnese durchgeführt werden.',
+        opts: ['Richtig','Falsch',],
+        correct: 'Falsch',
+        extra: {
+          question: 'Worauf stützt sie sich dann?',
+          opts: ['Schweigepflicht','Rettungsdienst-Vorgabe','Einwilligung der Pflege','Mutmaßlicher Wille'],
+          correct: 'Mutmaßlicher Wille'
+        }
+      },
+      {
+        q: 'q5',
+        text: 'Ziel der Fremdanamnese ist es, Angaben zu Vorerkrankungen, aktuellen Beschwerden und sozialen Faktoren zu erheben.',
+        opts: ['Richtig','Falsch',],
+        correct: 'Richtig',
+        extra: {
+          question: 'Welcher Aspekt gehört NICHT dazu?',
+          opts: ['Medikationen','Allergien','Familienstand','Psychosoziale Faktoren'],
+          correct: 'Familienstand'
+        }
+      },
+      {
+        q: 'q6',
+        text: 'Die Erhebung psychosozialer Faktoren gehört nicht zum Aufgabenbereich der Fremdanamnese.',
+        opts: ['Richtig','Falsch',],
+        correct: 'Falsch',
+        extra: {
+          question: 'Welcher der folgenden Aspekte gehört zu den psychosozialen Faktoren, die in der Fremdanamnese erfasst werden?',
+          opts: ['Blutdruckwerte und die Pulsmessung','Art und Dosierung von Medikamenten','familiäre und berufliche Unterstützung','Ergebnisse bildgebender Verfahren'],
+          correct: 'familiäre und berufliche Unterstützung'
+        }
+      },
+      {
+        q: 'q7',
+        text: 'Fremdanamnestische Angaben sollten nach Möglichkeit durch Dokumentationen validiert werden.',
+        opts: ['Richtig','Falsch',],
+        correct: 'Richtig',
+        extra: {
+          question: 'Welche der folgenden Quellen eignet sich am besten zur Validierung fremdanamnestischer Angaben?',
+          opts: ['Private Tagebucheinträge des Patienten','Arztbriefe oder Pflegeberichte','Informationen aus sozialen Medien','Broschüren von Arzneimitteln'],
+          correct: 'Arztbriefe oder Pflegeberichte'
+        }
+      },
+      {
+        q: 'q8',
+        text: 'Standardisierte Fragen erleichtern eine systematische Erfassung wichtiger Informationen.',
+        opts: ['Richtig','Falsch',],
+        correct: 'Richtig',
+        extra: {
+          question: 'Standardisierte Fragen in der Fremdanamnese dienen hauptsächlich dazu, …',
+          opts: ['spontan auf individuelle Gesprächsdynamiken zu reagieren.','ausschließlich geschlossene Ja/Nein-Antworten zu erzwingen.','alle relevanten Themenbereiche gleichmäßig und systematisch abzudecken.','die Gesamtdauer des Gesprächs auf unter 5 Minuten zu beschränken.'],
+          correct: 'alle relevanten Themenbereiche gleichmäßig und systematisch abzudecken.'
+        }
+      },
+      {
+        q: 'q9',
+        text: 'Enge interdisziplinäre Zusammenarbeit kann die Qualität der Fremdanamnese erhöhen.',
+        opts: ['Richtig','Falsch',],
+        correct: 'Richtig',
+        extra: {
+          question: 'Welcher Vorteil ergibt sich direkt aus enger interdisziplinärer Zusammenarbeit bei der Fremdanamnese?',
+          opts: ['Verkürzung des Anamnesegesprächs auf wenige Minuten','Ergänzung unterschiedlicher fachlicher Perspektiven','Verzicht auf die Validierung fremdanamnestischer Angaben','Beschränkung auf die reine Dokumentation medizinischer Daten'],
+          correct: 'Ergänzung unterschiedlicher fachlicher Perspektiven'
+        }
+      }
+    ];
+
+    const game = document.getElementById('game');
+
+    // Karten erzeugen
+    cardsData.forEach(data => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.q = data.q;
+      card.tabIndex = 0;
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front"></div>
+          <div class="card-back">
+            <div class="question">${data.text}</div>
+            <div class="options">
+              ${data.opts.map((o,i)=>`
+                <label data-text="${o}">
+                  <span class="option-letter">${String.fromCharCode(65+i)})</span>
+                  <span class="option-text">${o}</span>
+                  <input type="radio" name="${data.q}" />
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        </div>`;
+      game.appendChild(card);
+      shuffleOptions(card.querySelector('.options'));
+    });
+
+    // Karten mischen
+    function shuffleCards(){
+      Array.from(game.children)
+        .sort(()=>Math.random()-0.5)
+        .forEach(c=>game.appendChild(c));
+    }
+    shuffleCards();
+
+    let currentCard = null, busy = false;
+
+    document.querySelectorAll('.card').forEach(card => {
+      const tryFlip = () => {
+        if (busy || card.classList.contains('matched')) return;
+        if (currentCard && currentCard!==card && !currentCard.classList.contains('matched')) return;
+        if (card.classList.contains('flipped')) {
+          card.querySelectorAll('input').forEach(i=>i.checked=false);
+          shuffleOptions(card.querySelector('.options'));
+        }
+        card.classList.toggle('flipped');
+        currentCard = card.classList.contains('flipped') ? card : null;
+      };
+      card.addEventListener('click', e => {
+        if (e.target.closest('.options')) return;
+        tryFlip();
+      });
+      card.addEventListener('keydown', e => {
+        if ((e.key==='Enter'||e.key===' ') && !busy) {
+          e.preventDefault(); tryFlip();
+        }
+      });
+
+      card.querySelectorAll(`input[name="${card.dataset.q}"]`).forEach(input => {
+        input.addEventListener('change', () => {
+          if (!card.classList.contains('flipped')) return;
+          busy = true;
+          const data = cardsData.find(d=>d.q===card.dataset.q);
+          const selText = input.closest('label').dataset.text;
+          if (selText !== data.correct) {
+            card.classList.add('mismatch');
+            setTimeout(() => {
+              card.classList.remove('mismatch','flipped');
+              card.querySelectorAll(`input[name="${data.q}"]`).forEach(i=>i.checked=false);
+              shuffleOptions(card.querySelector('.options'));
+              currentCard = null; busy = false;
+            },1500);
+          } else {
+            showPopup(card,data.extra);
+          }
+        });
+      });
+    });
+
+    // Popup-Funktion
+    const popup = document.getElementById('popup');
+    const content = document.getElementById('popup-content');
+    function showPopup(card, extra) {
+      content.innerHTML = '';
+      const qEl = document.createElement('div');
+      qEl.className = 'question';
+      qEl.textContent = extra.question;
+      content.appendChild(qEl);
+      const optsContainer = document.createElement('div');
+      optsContainer.className = 'options';
+      extra.opts.forEach((o,i) => {
+        const lbl = document.createElement('label');
+        lbl.dataset.text = o;
+        lbl.innerHTML = `
+          <span class="option-letter">${String.fromCharCode(65+i)})</span>
+          <span class="option-text">${o}</span>
+          <input type="radio" name="popup" />
+        `;
+        optsContainer.appendChild(lbl);
+      });
+      shuffleOptions(optsContainer);
+      content.appendChild(optsContainer);
+      let fb;
+      const btn = document.createElement('button');
+      btn.textContent = 'Okay';
+      btn.addEventListener('click', () => {
+        const chosen = content.querySelector('input[name="popup"]:checked');
+        if (!chosen) return;
+        const selText = chosen.closest('label').dataset.text;
+        if (selText !== extra.correct) {
+          fb && fb.remove();
+          fb = document.createElement('div');
+          fb.textContent = 'Leider falsch';
+          fb.style.color='red'; fb.style.marginTop='0.5rem';
+          content.appendChild(fb);
+          setTimeout(() => {
+            popup.style.display='none';
+            card.classList.remove('flipped');
+            card.querySelectorAll(`input[name="${card.dataset.q}"]`).forEach(i=>i.checked=false);
+            shuffleOptions(card.querySelector('.options'));
+            currentCard=null; busy=false;
+          },1500);
+        } else {
+          fb && fb.remove();
+          fb = document.createElement('div');
+          fb.textContent='Richtig!';
+          fb.style.color='green'; fb.style.marginTop='0.5rem';
+          content.appendChild(fb);
+          setTimeout(() => {
+            popup.style.display='none';
+            card.classList.add('matched');
+            card.querySelectorAll(`input[name="${card.dataset.q}"]`).forEach(i=>i.disabled=true);
+            currentCard=null; busy=false;
+          },1500);
+        }
+      });
+      content.appendChild(btn);
+      popup.style.display='flex';
+    }
+
+    // Neustart
+    document.getElementById('restart').addEventListener('click', () => {
+      busy=false; currentCard=null;
+      shuffleCards();
+      document.querySelectorAll('.card').forEach(c => {
+        c.classList.remove('flipped','matched','mismatch');
+        shuffleOptions(c.querySelector('.options'));
+        c.querySelectorAll('input').forEach(i=>{ i.checked=false; i.disabled=false; });
+      });
+      popup.style.display='none';
+    });
+  </script>
+</body>
+</html>

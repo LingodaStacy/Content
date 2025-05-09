@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Clipboard Modal mit PDF-Viewer</title>
+  <title>Clipboard Modal mit großem PDF-Viewer</title>
   <!-- Google Fonts: Open Sans -->
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
   <style>
@@ -23,57 +23,57 @@
       cursor: pointer;
       fill: #2c3e50;
       transition: fill .2s;
+      z-index: 1;
     }
     #clipboardIcon:hover {
       fill: #34495e;
     }
 
-    /* Modal Overlay */
+    /* Modal Overlay (versteckt) */
     #modalOverlay {
       display: none;
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.6);
       justify-content: center;
       align-items: center;
-      z-index: 1000;
+      z-index: 10;
     }
 
-    /* Modal Content (groß) */
+    /* Modal Content (groß!) */
     #modalContent {
       background: #fff;
-      width: 80%;         /* 80% des Viewports */
-      max-width: 800px;   /* Maximalbreite */
-      height: 80%;        /* 80% der Viewport-Höhe */
+      width: 90vw;       /* 90% der Viewport-Breite */
+      height: 90vh;      /* 90% der Viewport-Höhe */
       border-radius: 8px;
-      overflow: hidden;   /* Scrollbars vom iframe */
+      overflow: hidden;  /* Scroll-Bars im iFrame */
       position: relative;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 20px rgba(0,0,0,0.4);
     }
 
-    /* Close Button */
+    /* Close-Button oben rechts */
     #closeBtn {
       position: absolute;
       top: 10px;
       right: 10px;
-      font-size: 24px;
+      font-size: 28px;
       line-height: 1;
       cursor: pointer;
-      z-index: 2;
+      z-index: 12;
     }
 
-    /* iframe füllt Modal komplett */
+    /* iFrame soll auf jeden Fall den ganzen Modal-Content füllen */
     #modalContent iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
+      width: 100% !important;
+      height: 100% !important;
+      border: none !important;
     }
   </style>
 </head>
 <body>
 
-  <!-- kleines Clipboard-Icon mit Linien -->
+  <!-- Clipboard-Icon -->
   <svg id="clipboardIcon" viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg">
     <!-- Metall-Klammer -->
     <rect x="144" y="16" width="96" height="16" rx="4" fill="#bbb"/>
@@ -111,7 +111,7 @@
   <div id="modalOverlay">
     <div id="modalContent">
       <span id="closeBtn">&times;</span>
-      <!-- PDF via Google Docs Viewer einbinden -->
+      <!-- Google Docs Viewer -->
       <iframe
         src="https://docs.google.com/gview?url=https://raw.githubusercontent.com/LingodaStacy/Content/main/Pflegebericht.pdf&embedded=true"
         allow="autoplay">
@@ -124,15 +124,15 @@
     const overlay  = document.getElementById('modalOverlay');
     const closeBtn = document.getElementById('closeBtn');
 
-    // Icon klick öffnet Modal
+    // Klick auf Icon: Modal als Flex-Container anzeigen
     icon.addEventListener('click', () => {
       overlay.style.display = 'flex';
     });
-    // × klick schließt Modal
+    // Klick auf ×: Modal verstecken
     closeBtn.addEventListener('click', () => {
       overlay.style.display = 'none';
     });
-    // Klick außerhalb des Inhalts schließt Modal
+    // Klick außerhalb des Inhalts: auch schließen
     overlay.addEventListener('click', e => {
       if (e.target === overlay) {
         overlay.style.display = 'none';

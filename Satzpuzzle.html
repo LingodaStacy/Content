@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
   <title>Drag-and-Drop Satzspiel</title>
   <!-- Open Sans einbinden -->
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
@@ -80,12 +80,33 @@
   <!-- SortableJS für Maus & Touch -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script>
+    // Jeder Satz mit separater Definition der Teile (parts) und der Lösung (solution)
     const sentences = [
-      ["Der Hund", "läuft", "schnell", "über", "die Wiese"],
-      ["Die Katze", "schläft", "den ganzen Tag"],
-      ["Wir", "gehen", "morgen", "ins Kino"],
-      ["Das Wetter", "ist", "heute", "sehr schön"],
-      ["Meine Freunde", "spielen", "Fußball", "im Park"]
+      {
+        original: "Der Arzt erhebt die Fremdanamnese im Beisein enger Familienangehöriger.",
+        parts: ["Die", "Erhebung", "der", "Fremdanamnese", "findet", "im", "Beisein", "enger", "Familienangehöriger", "statt", "."],
+        solution: ["Die", "Erhebung", "der", "Fremdanamnese", "findet", "im", "Beisein", "enger", "Familienangehöriger", "statt", "."]
+      },
+      {
+        original: "Die Pflegekraft gibt nur den engsten Vertrauten Auskunft über den Zustand der Patienten.",
+        parts: ["Auskunft", "wird", "nur", "den", "engsten", "Vertrauten", "der", "Patienten", "erteilt", "."],
+        solution: ["Auskunft", "wird", "nur", "den", "engsten", "Vertrauten", "der", "Patienten", "erteilt", "."]
+      },
+      {
+        original: "Die Ärztin entscheidet oft gemeinsam mit Angehörigen über eine Therapiemaßnahme.",
+        parts: ["Die", "Entscheidung", "über", "eine", "Therapiemaßnahme", "fällt", "oft", "gemeinsam", "mit", "Angehörigen", "."],
+        solution: ["Die", "Entscheidung", "über", "eine", "Therapiemaßnahme", "fällt", "oft", "gemeinsam", "mit", "Angehörigen", "."]
+      },
+      {
+        original: "Der Sohn informiert das Team über die Medikamentenliste seines Vaters.",
+        parts: ["Die", "Information", "über", "die", "Medikamentenliste", "an", "das", "Team", "kommt", "vom", "Sohn", "des", "Patienten", "."],
+        solution: ["Die", "Information", "über", "die", "Medikamentenliste", "an", "das", "Team", "kommt", "vom", "Sohn", "des", "Patienten", "."]
+      },
+      {
+        original: "Der Arzt validiert die Angaben mit einem Pflegebericht.",
+        parts: ["Die", "Validierung", "der", "Angaben", "des", "Pflegeberichts", "erfolgt", "durch", "den", "Arzt", "."],
+        solution: ["Die", "Validierung", "der", "Angaben", "des", "Pflegeberichts", "erfolgt", "durch", "den", "Arzt", "."]
+      }
     ];
 
     function shuffle(array) {
@@ -99,16 +120,16 @@
 
     const gameEl = document.getElementById("game");
 
-    sentences.forEach((originalArr, si) => {
+    sentences.forEach((sentence, si) => {
       const cont = document.createElement("div");
       cont.className = "sentence-container";
 
-      const title = document.createElement("h2");
-      title.textContent = `Satz ${si + 1}`;
+      // Originalsatz unabhängig anzeigen
       const orig = document.createElement("p");
       orig.className = "original";
-      orig.textContent = "Originalsatz: " + originalArr.join(" ");
+      orig.textContent = sentence.original;
 
+      // Pool und Ziel
       const pool = document.createElement("ul"); pool.className = "pool";
       const target = document.createElement("ul"); target.className = "target";
       const btn = document.createElement("button"); btn.className = "check"; btn.textContent = "Prüfen";
@@ -116,7 +137,7 @@
       const action = document.createElement("div"); action.className = "action";
       action.append(btn, res);
 
-      cont.append(title, orig, pool, target, action);
+      cont.append(orig, pool, target, action);
       gameEl.appendChild(cont);
 
       let sortablePool, sortableTarget;
@@ -125,28 +146,26 @@
         res.textContent = "";
         pool.innerHTML = "";
         target.innerHTML = "";
-        // Teile zufällig anordnen
-        const scrambled = shuffle(originalArr);
+        // Teile mischen
+        const scrambled = shuffle(sentence.parts);
         scrambled.forEach((text, pi) => {
           const li = document.createElement("li");
           li.textContent = text;
           li.id = `s${si}-p${pi}`;
           pool.appendChild(li);
         });
-        // (Re)initialisiere Sortables nach Neu-Laden
+        // Sortable neu
         if (sortablePool) sortablePool.destroy();
         if (sortableTarget) sortableTarget.destroy();
         enableDrag();
       }
 
       function enableDrag() {
-        // Pool: verschieben (kein Cloning), kein Put von außen, kein internes Sortieren
         sortablePool = Sortable.create(pool, {
           group: { name: 'shared', pull: true, put: false },
           sort: false,
           animation: 150
         });
-        // Target: Items aufnehmen und sortieren
         sortableTarget = Sortable.create(target, {
           group: 'shared',
           animation: 150
@@ -155,21 +174,20 @@
 
       btn.addEventListener("click", () => {
         const userOrder = Array.from(target.children).map(li => li.textContent);
-        if (userOrder.length !== originalArr.length) {
+        if (userOrder.length !== sentence.solution.length) {
           res.textContent = "Bitte alle Teile anordnen!";
           res.style.color = "orange";
           return;
         }
-        const correct = userOrder.join(" ") === originalArr.join(" ");
+        const correct = userOrder.join(" ") === sentence.solution.join(" ");
         if (correct) {
-          res.textContent = "🎉 Richtig! Gut gemacht.";
+          res.textContent = "✔ Richtig! Gut gemacht.";
           res.style.color = "green";
-          // Deaktiviere Drag und färbe pink
           sortablePool.option('disabled', true);
           sortableTarget.option('disabled', true);
           target.querySelectorAll('li').forEach(li => li.style.background = "#FF33CC");
         } else {
-          res.textContent = "❌ Leider falsch. Teile springen in 2 Sek. zurück.";
+          res.textContent = "❌ Leider falsch. Versuche es noch einmal.";
           res.style.color = "red";
           setTimeout(load, 2000);
         }

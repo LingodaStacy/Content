@@ -9,7 +9,8 @@
       font-family: sans-serif;
       padding: 20px;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
     }
     .game-wrapper {
       display: grid;
@@ -73,6 +74,15 @@
       color: white;              /* Text/Icon weiß */
       cursor: default;
     }
+
+    /* ===== Erfolgsnachricht ===== */
+    #resultMessage {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #2CBE55;
+      text-align: center;
+      visibility: hidden;
+    }
   </style>
 </head>
 <body>
@@ -80,16 +90,20 @@
     <div class="audio-list" id="audioList"></div>
     <div class="term-list" id="termList"></div>
   </div>
+  <div id="resultMessage">Super, du hast alles richtig gelöst!</div>
 
   <script>
+    // Globales Flag, um paralleles Abspielen zu verhindern
+    let isPlaying = false;
+
     // 1) Daten: Begriff + Audio-URL
     const pairs = [
-      { term: "akutes Delir",       audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/akutes Delir.mp3" },
-      { term: "Exsikkose",       audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/Exsikkose.mp3" },
-      { term: "vaskuläre Demenz",  audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/vaskul%C3%A4re%20Demenz.mp3" },
-      { term: "Halluzination",       audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/Halluzination.mp3" },
-      { term: "Nestelbewegungen",  audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/Nestelbewegungen.mp3" },
-      { term: "Sturzprophylaxe",     audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/Sturzprophylaxe.mp3" }
+      { term: "akutes Delir",       audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/akutes%20Delir.mp3" },
+      { term: "Exsikkose",          audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/Exsikkose.mp3" },
+      { term: "vaskuläre Demenz",   audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/vaskul%C3%A4re%20Demenz.mp3" },
+      { term: "Halluzination",      audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/Halluzination.mp3" },
+      { term: "Nestelbewegungen",   audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/Nestelbewegungen.mp3" },
+      { term: "Sturzprophylaxe",    audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/Sturzprophylaxe.mp3" }
     ];
 
     // Shuffle-Helper
@@ -104,6 +118,7 @@
     // 2) DOM-Refs
     const audioList = document.getElementById('audioList');
     const termList  = document.getElementById('termList');
+    const resultMsg = document.getElementById('resultMessage');
 
     // Kopien mischen
     const audioItems = shuffle(pairs.map(p => ({...p})));
@@ -117,9 +132,29 @@
       el.dataset.term = item.term;
       el.innerHTML = '🔊';
 
-      // Klick zum Abspielen
+      // Klick zum Abspielen (nur, wenn kein Audio läuft und nicht gematcht)
       el.addEventListener('click', () => {
-        new Audio(item.audio).play();
+        if (isPlaying || el.classList.contains('matched')) return;
+
+        const audioclip = new Audio(item.audio);
+
+        // Globales Flag setzen, alle Boxen deaktivieren
+        isPlaying = true;
+        document.querySelectorAll('.audio-item').forEach(box => {
+          box.style.pointerEvents = 'none';
+        });
+
+        // Am Ende: Flag zurücksetzen, nur ungematchte Boxen wieder aktivieren
+        audioclip.addEventListener('ended', () => {
+          isPlaying = false;
+          document.querySelectorAll('.audio-item').forEach(box => {
+            if (!box.classList.contains('matched')) {
+              box.style.pointerEvents = '';
+            }
+          });
+        });
+
+        audioclip.play();
       });
 
       // Drag-Start
@@ -164,6 +199,12 @@
           // richtiges Paar
           el.classList.add('matched');
           audioEl.classList.add('matched');
+
+          // prüfen, ob alle richtig gelöst wurden
+          const matchedCount = document.querySelectorAll('.audio-item.matched').length;
+          if (matchedCount === pairs.length) {
+            resultMsg.style.visibility = 'visible';
+          }
         } else {
           // falsches Paar: Shake
           audioEl.classList.add('wrong');

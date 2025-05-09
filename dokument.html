@@ -2,15 +2,22 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Clipboard Modal mit Linien & Google Docs Viewer</title>
+  <title>Clipboard Modal mit PDF-Viewer</title>
+  <!-- Google Fonts: Open Sans -->
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
   <style>
+    /* Body als Flex-Container zum Zentrieren des Icons */
     body {
       font-family: 'Open Sans', sans-serif;
-      display: flex; justify-content: center; align-items: center;
-      height: 100vh; margin: 0; background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f5f5f5;
     }
-    /* Clipboard-Icon zentriert */
+
+    /* Clipboard-Icon (klein) */
     #clipboardIcon {
       width: 80px;
       cursor: pointer;
@@ -24,57 +31,65 @@
     /* Modal Overlay */
     #modalOverlay {
       display: none;
-      position: fixed; top: 0; left: 0;
+      position: fixed;
+      top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      justify-content: center; align-items: center;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
       z-index: 1000;
     }
-    /* Modal Content */
+
+    /* Modal Content (groß) */
     #modalContent {
       background: #fff;
-      width: 80%; max-width: 800px;
-      height: 80%;
+      width: 80%;         /* 80% des Viewports */
+      max-width: 800px;   /* Maximalbreite */
+      height: 80%;        /* 80% der Viewport-Höhe */
       border-radius: 8px;
-      overflow: hidden;
+      overflow: hidden;   /* Scrollbars vom iframe */
       position: relative;
       box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
+
     /* Close Button */
     #closeBtn {
-      position: absolute; top: 10px; right: 10px;
-      font-size: 24px; line-height: 1; cursor: pointer;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
       z-index: 2;
     }
-    /* iFrame füllt Modal */
+
+    /* iframe füllt Modal komplett */
     #modalContent iframe {
-      width: 100%; height: 100%; border: none;
+      width: 100%;
+      height: 100%;
+      border: none;
     }
   </style>
 </head>
 <body>
 
-  <!-- Clipboard-Icon mit Metall-Klammer, Body, Papier & Linien -->
+  <!-- kleines Clipboard-Icon mit Linien -->
   <svg id="clipboardIcon" viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg">
     <!-- Metall-Klammer -->
     <rect x="144" y="16" width="96" height="16" rx="4" fill="#bbb"/>
     <circle cx="144" cy="24" r="4" fill="#888"/>
     <circle cx="240" cy="24" r="4" fill="#888"/>
-
     <!-- Clipboard-Body -->
     <path d="M312 0H272c-13.3 0-24 10.7-24 24v16H136V24
              c0-13.3-10.7-24-24-24H72C48.7 0 32 16.7 32 40v32h320
              V40c0-23.3-16.7-40-40-40z"/>
     <path d="M272 64V24c0-13.3-10.7-24-24-24H136
              c-13.3 0-24 10.7-24 24v40h160z" opacity=".2"/>
-
     <!-- Clipboard-Platte -->
     <rect x="32" y="80" width="320" height="432" rx="24" fill="#2c3e50"/>
-
     <!-- Weißes Papier -->
     <rect x="64" y="112" width="256" height="368" rx="6"
           fill="#ffffff" stroke="#ddd" stroke-width="1"/>
-
     <!-- Linien auf dem Papier -->
     <g stroke="#ddd" stroke-width="1">
       <line x1="80"  y1="132" x2="304" y2="132"/>
@@ -96,10 +111,11 @@
   <div id="modalOverlay">
     <div id="modalContent">
       <span id="closeBtn">&times;</span>
-      <!-- Google Docs Viewer für dein GitHub-PDF -->
+      <!-- PDF via Google Docs Viewer einbinden -->
       <iframe
         src="https://docs.google.com/gview?url=https://raw.githubusercontent.com/LingodaStacy/Content/main/Pflegebericht.pdf&embedded=true"
-      ></iframe>
+        allow="autoplay">
+      </iframe>
     </div>
   </div>
 
@@ -108,14 +124,19 @@
     const overlay  = document.getElementById('modalOverlay');
     const closeBtn = document.getElementById('closeBtn');
 
+    // Icon klick öffnet Modal
     icon.addEventListener('click', () => {
       overlay.style.display = 'flex';
     });
+    // × klick schließt Modal
     closeBtn.addEventListener('click', () => {
       overlay.style.display = 'none';
     });
+    // Klick außerhalb des Inhalts schließt Modal
     overlay.addEventListener('click', e => {
-      if (e.target === overlay) overlay.style.display = 'none';
+      if (e.target === overlay) {
+        overlay.style.display = 'none';
+      }
     });
   </script>
 

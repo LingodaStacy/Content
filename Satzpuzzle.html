@@ -13,14 +13,18 @@
       background: #fff;
     }
 
-    /* Container: feste Breite, kein automatischer Umbau */
+    /* Container: responsive Breite statt feste 1200px */
     .sentence-container {
       margin-bottom: 2em;
       padding: 1em;
       border: 1px solid #ddd;
       border-radius: 6px;
       background: #fff;
-      width: 1200px;      /* feste Breite */
+
+      /* ersetzt width:1200px; */
+      box-sizing: border-box;  /* Padding und Border zählen zur Gesamtbreite */
+      width: 100%;             /* passt sich der iframe-Breite an */
+      max-width: 1200px;       /* wächst nicht über 1200px hinaus */
     }
 
     .sentence-container p.original {

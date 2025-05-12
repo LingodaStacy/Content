@@ -23,14 +23,29 @@
       width: 1200px;      /* feste Breite */
     }
 
-    .sentence-container h2 {
-      margin: 0 0 0.5em;
-      font-size: 1.1em;
-    }
-
     .sentence-container p.original {
       margin: 0 0 1em;
       font-weight: bold;
+    }
+
+    /* Visuelle Unterbereiche */
+    .drop-area, .pool-area {
+      padding: 0.5em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 1em;
+    }
+    .drop-area {
+      background: #eaf4ff;
+    }
+    .pool-area {
+      background: #f9f9f9;
+    }
+    .drop-area h3,
+    .pool-area h3 {
+      margin: 0 0 0.5em;
+      font-size: 1em;
+      color: #153BFF;
     }
 
     /* Pool und Ziel: in einer Zeile, kein Wrap */
@@ -38,7 +53,7 @@
     ul.target {
       list-style: none;
       padding: 0;
-      margin: 0.5em 0;
+      margin: 0;
       min-height: 3em;
       display: flex;
       flex-wrap: nowrap;    /* kein Umbruch */
@@ -62,7 +77,6 @@
       text-align: center;
       white-space: nowrap;  /* schützt vor Wortumbruch im Inneren */
     }
-
     li:active { cursor: grabbing; }
 
     .action {
@@ -139,20 +153,40 @@
       const cont = document.createElement("div");
       cont.className = "sentence-container";
 
-      // Originalsatz unabhängig anzeigen
+      // Originalsatz
       const orig = document.createElement("p");
       orig.className = "original";
       orig.textContent = sentence.original;
 
-      // Pool und Ziel
-      const pool = document.createElement("ul"); pool.className = "pool";
-      const target = document.createElement("ul"); target.className = "target";
-      const btn = document.createElement("button"); btn.className = "check"; btn.textContent = "Prüfen";
-      const res = document.createElement("span"); res.className = "result";
-      const action = document.createElement("div"); action.className = "action";
+      // Drop-Bereich mit Überschrift
+      const dropArea = document.createElement("div");
+      dropArea.className = "drop-area";
+      const dropTitle = document.createElement("h3");
+      dropTitle.textContent = "Dein Satz";
+      const target = document.createElement("ul");
+      target.className = "target";
+      dropArea.append(dropTitle, target);
+
+      // Pool-Bereich mit Überschrift
+      const poolArea = document.createElement("div");
+      poolArea.className = "pool-area";
+      const poolTitle = document.createElement("h3");
+      poolTitle.textContent = "Verfügbare Wort-Bausteine";
+      const pool = document.createElement("ul");
+      pool.className = "pool";
+      poolArea.append(poolTitle, pool);
+
+      // Prüfung & Ergebnis
+      const btn = document.createElement("button");
+      btn.className = "check";
+      btn.textContent = "Prüfen";
+      const res = document.createElement("span");
+      res.className = "result";
+      const action = document.createElement("div");
+      action.className = "action";
       action.append(btn, res);
 
-      cont.append(orig, pool, target, action);
+      cont.append(orig, dropArea, poolArea, action);
       gameEl.appendChild(cont);
 
       let sortablePool, sortableTarget;
@@ -169,7 +203,7 @@
           li.id = `s${si}-p${pi}`;
           pool.appendChild(li);
         });
-        // Sortable neu
+        // Sortable neu initialisieren
         if (sortablePool) sortablePool.destroy();
         if (sortableTarget) sortableTarget.destroy();
         enableDrag();

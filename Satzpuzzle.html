@@ -12,35 +12,45 @@
       padding: 2em;
       background: #fff;
     }
+
+    /* Container: feste Breite, kein automatischer Umbau */
     .sentence-container {
       margin-bottom: 2em;
       padding: 1em;
       border: 1px solid #ddd;
       border-radius: 6px;
       background: #fff;
+      width: 1200px;      /* feste Breite */
     }
+
     .sentence-container h2 {
       margin: 0 0 0.5em;
       font-size: 1.1em;
     }
+
     .sentence-container p.original {
       margin: 0 0 1em;
       font-weight: bold;
     }
-    ul.pool, ul.target {
+
+    /* Pool und Ziel: in einer Zeile, kein Wrap */
+    ul.pool,
+    ul.target {
       list-style: none;
       padding: 0;
       margin: 0.5em 0;
       min-height: 3em;
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;    /* kein Umbruch */
       gap: 0.5em;
     }
+
     /* Drop-Feld nur Unterstreichung */
     ul.target {
       border: none;
       border-bottom: 2px solid #153BFF;
     }
+
     li {
       padding: 0.5em 1em;
       background: #153BFF;
@@ -50,14 +60,18 @@
       cursor: grab;
       user-select: none;
       text-align: center;
+      white-space: nowrap;  /* schützt vor Wortumbruch im Inneren */
     }
+
     li:active { cursor: grabbing; }
+
     .action {
       display: inline-flex;
       align-items: center;
       gap: 0.5em;
       margin-top: 0.5em;
     }
+
     button.check {
       padding: 0.5em 1em;
       font-size: 1em;
@@ -67,6 +81,7 @@
       border-radius: 4px;
       cursor: pointer;
     }
+
     .result {
       display: inline-block;
       min-width: 150px;

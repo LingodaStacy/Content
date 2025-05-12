@@ -9,9 +9,8 @@
     html, body {
       background-color: #ffffff !important;
       margin: 0;
-      padding: 20px;   /* optionaler Innenabstand */
+      padding: 20px;
     }
-
     body {
       font-family: sans-serif;
       display: flex;
@@ -19,8 +18,6 @@
       align-items: center;
       overflow-x: hidden;
     }
-
-    /* Gesamt-Wrapper, Bilder oben, Audios unten */
     .game-wrapper {
       display: flex;
       flex-direction: column;
@@ -28,8 +25,6 @@
       max-width: 800px;
       width: 100%;
     }
-
-    /* Flexible 5-Spalten-Anordnung, passt sich an */
     .image-row, .audio-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -40,8 +35,6 @@
         grid-template-columns: repeat(2, 1fr);
       }
     }
-
-    /* ===== Dragbare Bilder ===== */
     .image-item {
       display: flex;
       align-items: center;
@@ -58,8 +51,6 @@
       max-width: 100%;
       max-height: 100%;
     }
-
-    /* ===== Audio-Drop-Zonen ===== */
     .audio-target {
       display: flex;
       align-items: center;
@@ -71,13 +62,12 @@
       border-radius: 8px;
       user-select: none;
       aspect-ratio: 2.5 / 1;
+      transition: background 0.2s, border-color 0.2s;
     }
     .audio-target.over {
       background: #ff00ff;
       border-color: #ff00ff;
     }
-
-    /* ===== Falscher Drop: Shake ===== */
     .image-item.wrong {
       animation: shake 0.3s;
     }
@@ -86,16 +76,12 @@
       20%,60% { transform: translateX(-5px); }
       40%,80% { transform: translateX(5px); }
     }
-
-    /* ===== Gematchte Paare: Lila ===== */
     .image-item.matched,
     .audio-target.matched {
       background: #9900ff;
       border-color: #9900ff;
       cursor: default;
     }
-
-    /* ===== Neustart-Button ===== */
     #restart {
       margin-top: 20px;
       padding: 10px 20px;
@@ -113,23 +99,28 @@
   </style>
 </head>
 <body>
-
   <div class="game-wrapper">
-    <!-- Reihe 1: Bilder -->
     <div class="image-row" id="imageList"></div>
-    <!-- Reihe 2: Audios -->
     <div class="audio-row" id="audioList"></div>
     <button id="restart">Noch einmal spielen</button>
   </div>
 
   <script>
+    // Globale Flagge, ob gerade ein Audio läuft
+    let isPlaying = false;
+
+    // Pärchen mit eindeutigen IDs
     const pairs = [
-      { term:"Arm",   image:"https://raw.githubusercontent.com/LingodaStacy/Content/main/atem.jpg",   audio:"https://raw.githubusercontent.com/LingodaStacy/Content/main/atemnot.mp3" },
-      { term:"Herz",  image:"https://raw.githubusercontent.com/LingodaStacy/Content/main/monitor.jpg",  audio:"https://raw.githubusercontent.com/LingodaStacy/Content/main/blutdruck.mp3" },
-      { term:"Kopf",  image:"https://raw.githubusercontent.com/LingodaStacy/Content/main/bike.jpg",  audio:"https://raw.githubusercontent.com/LingodaStacy/Content/main/fahrrad.mp3" },
-      { term:"Lunge", image:"https://raw.githubusercontent.com/LingodaStacy/Content/main/child.jpg", audio:"https://raw.githubusercontent.com/LingodaStacy/Content/main/kind.mp3" },
-	  { term:"Lunge", image:"https://raw.githubusercontent.com/LingodaStacy/Content/main/head.jpg", audio:"https://raw.githubusercontent.com/LingodaStacy/Content/main/Kopfschmerzen.mp3" }
+      { id: 0, term: "Arm",   image: "https://raw.githubusercontent.com/LingodaStacy/Content/main/atem.jpg",      audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/atemnot.mp3" },
+      { id: 1, term: "Herz",  image: "https://raw.githubusercontent.com/LingodaStacy/Content/main/monitor.jpg",   audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/blutdruck.mp3" },
+      { id: 2, term: "Kopf",  image: "https://raw.githubusercontent.com/LingodaStacy/Content/main/bike.jpg",      audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/fahrrad.mp3" },
+      { id: 3, term: "Lunge", image: "https://raw.githubusercontent.com/LingodaStacy/Content/main/child.jpg",     audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/kind.mp3" },
+      { id: 4, term: "Lunge", image: "https://raw.githubusercontent.com/LingodaStacy/Content/main/head.jpg",      audio: "https://raw.githubusercontent.com/LingodaStacy/Content/main/Kopfschmerzen.mp3" }
     ];
+
+    const imageList = document.getElementById('imageList');
+    const audioList = document.getElementById('audioList');
+    const restartBtn = document.getElementById('restart');
 
     function shuffle(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
@@ -139,42 +130,65 @@
       return arr;
     }
 
-    const imageList = document.getElementById('imageList');
-    const audioList = document.getElementById('audioList');
-    const restartBtn = document.getElementById('restart');
-
     function initGame() {
+      // Rücksetzen
       imageList.innerHTML = '';
       audioList.innerHTML = '';
+      isPlaying = false;
 
-      const imgs = shuffle(pairs.map(p => ({...p})));
-      const auds = shuffle(pairs.map(p => ({...p})));
+      const imgs = shuffle(pairs.map(p => ({ ...p })));
+      const auds = shuffle(pairs.map(p => ({ ...p })));
 
+      // Bilder erzeugen
       imgs.forEach(item => {
         const el = document.createElement('div');
         el.className = 'image-item';
         el.draggable = true;
-        el.dataset.term = item.term;
+        el.dataset.id = item.id;
         const img = document.createElement('img');
         img.src = item.image;
         img.alt = item.term;
         el.appendChild(img);
 
         el.addEventListener('dragstart', e => {
-          if (el.classList.contains('matched')) { e.preventDefault(); return; }
-          e.dataTransfer.setData('text/plain', item.term);
+          if (el.classList.contains('matched')) {
+            e.preventDefault();
+            return;
+          }
+          e.dataTransfer.setData('text/plain', item.id);
         });
 
         imageList.appendChild(el);
       });
 
+      // Audio-Drop-Zonen erzeugen
       auds.forEach(item => {
         const el = document.createElement('div');
         el.className = 'audio-target';
-        el.dataset.term = item.term;
+        el.dataset.id = item.id;
         el.innerHTML = '🔊';
 
-        el.addEventListener('click', () => new Audio(item.audio).play());
+        // Klick zum Abspielen
+        el.addEventListener('click', () => {
+          if (isPlaying || el.classList.contains('matched')) return;
+          isPlaying = true;
+          // alle Buttons deaktivieren
+          audioList.querySelectorAll('.audio-target').forEach(btn => {
+            btn.style.pointerEvents = 'none';
+          });
+
+          const audio = new Audio(item.audio);
+          audio.play();
+          audio.addEventListener('ended', () => {
+            isPlaying = false;
+            // nur noch nicht gematchte Buttons reaktivieren
+            audioList.querySelectorAll('.audio-target:not(.matched)').forEach(btn => {
+              btn.style.pointerEvents = 'auto';
+            });
+          });
+        });
+
+        // Drag & Drop
         el.addEventListener('dragover', e => {
           e.preventDefault();
           if (!el.classList.contains('matched')) el.classList.add('over');
@@ -183,9 +197,9 @@
         el.addEventListener('drop', e => {
           e.preventDefault();
           el.classList.remove('over');
-          const dragged = e.dataTransfer.getData('text/plain');
-          const imgEl = [...imageList.children].find(c => c.dataset.term === dragged);
-          if (dragged === item.term) {
+          const draggedId = e.dataTransfer.getData('text/plain');
+          const imgEl = imageList.querySelector(`.image-item[data-id="${draggedId}"]`);
+          if (draggedId === String(item.id)) {
             el.classList.add('matched');
             imgEl.classList.add('matched');
           } else {

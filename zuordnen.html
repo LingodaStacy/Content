@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Psychopathologischer Befund – In-Text Quiz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      padding: 1rem;
+    }
+    h1 {
+      margin-bottom: 1rem;
+    }
+    /* Container für den gesamten Text */
+    #text-container {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 1rem;
+      text-align: justify;
+      max-width: 800px;
+      margin-bottom: 2rem;
+    }
+    /* Klickbares Element */
+    clickable {
+      cursor: pointer;
+    }
+    clickable:hover {
+      background: rgba(200,200,255,0.3);
+    }
+    clickable.disabled {
+      color: deeppink;
+      pointer-events: none;
+    }
+    /* Modal Overlay */
+    #modalOverlay {
+      position: fixed; top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    /* Modal Box */
+    #modal {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 6px;
+      width: 90%; max-width: 500px;
+      max-height: 80vh;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: flex; flex-direction: column;
+    }
+    /* Statische Überschrift */
+    #modalHeader {
+      margin: 0 0 0.5rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    /* Scrollbarer Bereich für Kategorien */
+    #modalButtons {
+      flex: 1; overflow-y: auto; margin: 0.5rem 0;
+    }
+    #modalButtons .btn {
+      display: block; width: 100%; padding: 0.6rem;
+      margin: 0.3rem 0; border: none; border-radius: 4px;
+      text-align: left; cursor: pointer;
+    }
+    #modalButtons .btn:hover {
+      background: #eef;
+    }
+    /* Feedback im Popup */
+    #modalFeedback {
+      font-weight: bold; font-size: 1rem; margin: 0.5rem 0;
+    }
+    #modalFeedback.wrong { color: #FF3333; }
+    #modalFeedback.correct { color: #2CBE55; }
+    /* Footer-Button */
+    .btn.bottom {
+      padding: 0.6rem 1rem; border-radius: 4px;
+      border: none; cursor: pointer; align-self: flex-end;
+      margin-top: 0.5rem;
+      background: #153BFF; color: #fff;
+    }
+    .btn.bottom:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+
+  <h1>Quiz: Psychopathologischer Befund</h1>
+
+  <div id="text-container">
+    <p>
+      <clickable data-id="0">Gepflegtes Äußeres, mimisch verarmt, Blick häufig gesenkt.</clickable>
+      <clickable data-id="1">Im Kontakt verzögerte Reaktion, zurückhaltend bis misstrauisch.</clickable>
+      <clickable data-id="2">Leise Sprache, verlangsamt und inhaltlich knapp.</clickable>
+      <clickable data-id="3">Voll wach, bewusstseinsklar.</clickable>
+      <clickable data-id="4">Zu Zeit, Ort, Person und Situation vollständig orientiert.</clickable>
+      <clickable data-id="5">Aufmerksamkeit und Konzentration leicht vermindert.</clickable>
+      <clickable data-id="6">Kurzzeitgedächtnis und Merkfähigkeit sind eingeschränkt. Langzeitgedächtnis scheint weitgehend erhalten.</clickable>
+      <clickable data-id="7">Formal gedanklich verlangsamt.</clickable>
+      <clickable data-id="8">Keine Hinweise auf Wahnsymptome, Zwangsgedanken oder inhaltliche Denkstörungen. Die Patientin berichtet über ein ausgeprägtes Gefühl der Wertlosigkeit und Schuld.</clickable>
+      <clickable data-id="9">Keine Hinweise auf Halluzinationen, Illusionen oder andere Wahrnehmungsstörungen.</clickable>
+      <clickable data-id="10">Nicht gegeben. Keine Depersonalisation oder Derealisation, kein Hinweis auf Störungen der Ich-Grenzen.</clickable>
+      <clickable data-id="11">Depressiv verstimmt, affektarm, mit eingeschränkter Affektmodulation. Die Patientin berichtet über innere Leere, Hoffnungslosigkeit und Interessensverlust. Affekt kongruent zur Stimmung. Keine Affektlabilität oder Affektinkontinenz.</clickable>
+      <clickable data-id="12">Deutlich vermindert. Verlangsamte Bewegungsabläufe und geringe Spontanaktivität. Kein Anzeichen von motorischer Unruhe oder Katatonie.</clickable>
+      <clickable data-id="13">Passive Todeswünsche werden eingeräumt. Keine akuten Suizidgedanken oder -absichten zum Untersuchungszeitpunkt. Sicherheit durch engmaschige Kontrolle gewährleistet.</clickable>
+      <clickable data-id="14">Nicht gegeben. Keine Hinweise auf fremdaggressives Verhalten oder Impulsdurchbrüche.</clickable>
+      <clickable data-id="15">Diffuse Ängste in Bezug auf die eigene Zukunft und finanzielle Lage. Keine Panikattacken, keine phobischen Vermeidungstendenzen.</clickable>
+      <clickable data-id="16">Nicht vorhanden.</clickable>
+      <clickable data-id="17">Deutliches Morgentief, frühes Erwachen mit Grübelneigung. Schlaf insgesamt nicht erholsam.</clickable>
+      <clickable data-id="18">Realitätsprüfung intakt. Die Patientin zeigt eine teilweise Krankheitseinsicht und erkennt depressive Symptome an, neigt jedoch zur Selbstabwertung.</clickable>
+    </p>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalOverlay">
+    <div id="modal">
+      <div id="modalHeader">Kategorie auswählen</div>
+      <div id="modalButtons"></div>
+      <div id="modalFeedback"></div>
+      <button id="okBtn" class="btn bottom">Abbrechen</button>
+    </div>
+  </div>
+
+  <script>
+    const categories = [
+      'Erscheinungsbild','Kontaktverhalten','Sprache','Bewusstseinslage',
+      'Orientierung','Aufmerksamkeit und Konzentration','Gedächtnis',
+      'Formales Denken','Inhaltliches Denken','Wahrnehmung','Ich-Störungen',
+      'Affektivität','Antrieb und Psychomotorik','Suizidalität',
+      'Fremdgefährdung','Ängste','Zwänge','Zirkadianer Rhythmus',
+      'Realitätsprüfung und Krankheitseinsicht'
+    ];
+    const solutions = [...categories];
+
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalButtons = document.getElementById('modalButtons');
+    const modalFeedback= document.getElementById('modalFeedback');
+    const okBtn        = document.getElementById('okBtn');
+    let currentEl;
+
+    // Buttons erzeugen
+    categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.textContent = cat;
+      btn.dataset.cat = cat;
+      modalButtons.appendChild(btn);
+    });
+
+    // Klick auf <clickable>
+    document.querySelectorAll('clickable').forEach(el => {
+      el.addEventListener('click', () => {
+        currentEl = el;
+        modalFeedback.textContent = '';
+        modalFeedback.className = '';
+        modalButtons.style.display = 'block';
+        okBtn.textContent = 'Abbrechen';
+        okBtn.style.display = 'inline-block';
+        modalOverlay.style.display = 'flex';
+      });
+    });
+
+    // Kategorie auswählen
+    modalButtons.addEventListener('click', e => {
+      const chosen = e.target.dataset.cat;
+      if (!chosen) return;
+      const idx = +currentEl.dataset.id;
+      const correct = solutions[idx];
+      const isCorrect = chosen === correct;
+
+      modalFeedback.textContent = isCorrect
+        ? '✔ Richtig!'
+        : 'Leider falsch. Versuche es noch einmal!';
+      modalFeedback.classList.add(isCorrect ? 'correct' : 'wrong');
+
+      if (isCorrect) {
+        modalButtons.style.display = 'none';
+        currentEl.classList.add('disabled');
+        okBtn.textContent = 'Okay';
+      } else {
+        setTimeout(() => {
+          modalFeedback.textContent = '';
+          modalFeedback.className = '';
+        }, 2000);
+      }
+    });
+
+    // Ok/Abbrechen schließt Popup
+    okBtn.addEventListener('click', () => {
+      modalOverlay.style.display = 'none';
+    });
+    modalOverlay.addEventListener('click', e => {
+      if (e.target === modalOverlay) modalOverlay.style.display = 'none';
+    });
+  </script>
+</body>
+</html>

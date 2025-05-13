@@ -18,10 +18,14 @@
       border: 1px solid #ccc;
       border-radius: 4px;
       padding: 1rem;
-      text-align: justify;
+      text-align: justify; /* Blocksatz */
       max-width: 800px;
       margin-bottom: 2rem;
       font-size: 24px;
+      hyphens: auto;
+      -webkit-hyphens: auto;
+      -ms-hyphens: auto;
+      word-break: break-word;
     }
     /* Klickbares Element */
     clickable {
@@ -88,8 +92,6 @@
   </style>
 </head>
 <body>
-
-  <h1>Quiz: Psychopathologischer Befund</h1>
 
   <div id="text-container">
     <p>
@@ -189,7 +191,7 @@
       }
     });
 
-    // Ok/Abbrechen schließt Popup
+    // Ok/Abbrechen → Modal schließen
     okBtn.addEventListener('click', () => {
       modalOverlay.style.display = 'none';
     });

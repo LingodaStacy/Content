@@ -3,30 +3,57 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Psychopathologischer Befund – In-Text Quiz</title>
+  <title>Psychopathologischer Befund – Clipboard-Quiz</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       line-height: 1.6;
       padding: 1rem;
+      background: #f0f0f0;
     }
     h1 {
-      margin-bottom: 1rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
     }
-    /* Container für den gesamten Text */
+
+    /* Clipboard als blauer Klotz */
+    #clipboard {
+      position: relative;
+      background: #153BFF;
+      border-radius: 8px;
+      padding: 3rem 1.5rem 1.5rem;
+      max-width: 800px;
+      margin: 0 auto 2rem;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    /* Große „Klemme“ oben */
+    #clipboard::before {
+      content: "";
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 28px;
+      background: #e0e0e0;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+      box-shadow: inset 0 -2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* Weißes Papier innerhalb des Clipboards */
     #text-container {
-      border: 1px solid #ccc;
+      background: #fff;
       border-radius: 4px;
       padding: 1rem;
-      text-align: justify; /* Blocksatz */
-      max-width: 800px;
-      margin-bottom: 2rem;
+      text-align: justify;
       font-size: 20px;
       hyphens: auto;
       -webkit-hyphens: auto;
       -ms-hyphens: auto;
       word-break: break-word;
     }
+
     /* Klickbares Element */
     clickable {
       cursor: pointer;
@@ -38,6 +65,7 @@
       color: deeppink;
       pointer-events: none;
     }
+
     /* Modal Overlay */
     #modalOverlay {
       position: fixed; top: 0; left: 0;
@@ -57,7 +85,6 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       display: flex; flex-direction: column;
     }
-    /* Statische Überschrift */
     #modalHeader {
       margin: 0 0 0.5rem;
       font-size: 1.2rem;
@@ -93,28 +120,32 @@
 </head>
 <body>
 
-  <div id="text-container">
-    <p>
-      <clickable data-id="0">Gepflegtes Äußeres, mimisch verarmt, Blick häufig gesenkt.</clickable>
-      <clickable data-id="1">Im Kontakt verzögerte Reaktion, zurückhaltend bis misstrauisch.</clickable>
-      <clickable data-id="2">Leise Sprache, verlangsamt und inhaltlich knapp.</clickable>
-      <clickable data-id="3">Voll wach, bewusstseinsklar.</clickable>
-      <clickable data-id="4">Zu Zeit, Ort, Person und Situation vollständig orientiert.</clickable>
-      <clickable data-id="5">Aufmerksamkeit und Konzentration leicht vermindert.</clickable>
-      <clickable data-id="6">Kurzzeitgedächtnis und Merkfähigkeit sind eingeschränkt. Langzeitgedächtnis scheint weitgehend erhalten.</clickable>
-      <clickable data-id="7">Formal gedanklich verlangsamt.</clickable>
-      <clickable data-id="8">Keine Hinweise auf Wahnsymptome, Zwangsgedanken oder inhaltliche Denkstörungen. Die Patientin berichtet über ein ausgeprägtes Gefühl der Wertlosigkeit und Schuld.</clickable>
-      <clickable data-id="9">Keine Hinweise auf Halluzinationen, Illusionen oder andere Wahrnehmungsstörungen.</clickable>
-      <clickable data-id="10">Nicht gegeben. Keine Depersonalisation oder Derealisation, kein Hinweis auf Störungen der Ich-Grenzen.</clickable>
-      <clickable data-id="11">Depressiv verstimmt, affektarm, mit eingeschränkter Affektmodulation. Die Patientin berichtet über innere Leere, Hoffnungslosigkeit und Interessensverlust. Affekt kongruent zur Stimmung. Keine Affektlabilität oder Affektinkontinenz.</clickable>
-      <clickable data-id="12">Deutlich vermindert. Verlangsamte Bewegungsabläufe und geringe Spontanaktivität. Kein Anzeichen von motorischer Unruhe oder Katatonie.</clickable>
-      <clickable data-id="13">Passive Todeswünsche werden eingeräumt. Keine akuten Suizidgedanken oder -absichten zum Untersuchungszeitpunkt. Sicherheit durch engmaschige Kontrolle gewährleistet.</clickable>
-      <clickable data-id="14">Nicht gegeben. Keine Hinweise auf fremdaggressives Verhalten oder Impulsdurchbrüche.</clickable>
-      <clickable data-id="15">Diffuse Ängste in Bezug auf die eigene Zukunft und finanzielle Lage. Keine Panikattacken, keine phobischen Vermeidungstendenzen.</clickable>
-      <clickable data-id="16">Nicht vorhanden.</clickable>
-      <clickable data-id="17">Deutliches Morgentief, frühes Erwachen mit Grübelneigung. Schlaf insgesamt nicht erholsam.</clickable>
-      <clickable data-id="18">Realitätsprüfung intakt. Die Patientin zeigt eine teilweise Krankheitseinsicht und erkennt depressive Symptome an, neigt jedoch zur Selbstabwertung.</clickable>
-    </p>
+  <h1>Quiz: Psychopathologischer Befund</h1>
+
+  <div id="clipboard">
+    <div id="text-container">
+      <p>
+        <clickable data-id="0">Gepflegtes Äußeres, mimisch verarmt, Blick häufig gesenkt.</clickable>
+        <clickable data-id="1">Im Kontakt verzögerte Reaktion, zurückhaltend bis misstrauisch.</clickable>
+        <clickable data-id="2">Leise Sprache, verlangsamt und inhaltlich knapp.</clickable>
+        <clickable data-id="3">Voll wach, bewusstseinsklar.</clickable>
+        <clickable data-id="4">Zu Zeit, Ort, Person und Situation vollständig orientiert.</clickable>
+        <clickable data-id="5">Aufmerksamkeit und Konzentration leicht vermindert.</clickable>
+        <clickable data-id="6">Kurzzeitgedächtnis und Merkfähigkeit sind eingeschränkt. Langzeitgedächtnis scheint weitgehend erhalten.</clickable>
+        <clickable data-id="7">Formal gedanklich verlangsamt.</clickable>
+        <clickable data-id="8">Keine Hinweise auf Wahnsymptome, Zwangsgedanken oder inhaltliche Denkstörungen. Die Patientin berichtet über ein ausgeprägtes Gefühl der Wertlosigkeit und Schuld.</clickable>
+        <clickable data-id="9">Keine Hinweise auf Halluzinationen, Illusionen oder andere Wahrnehmungsstörungen.</clickable>
+        <clickable data-id="10">Nicht gegeben. Keine Depersonalisation oder Derealisation, kein Hinweis auf Störungen der Ich-Grenzen.</clickable>
+        <clickable data-id="11">Depressiv verstimmt, affektarm, mit eingeschränkter Affektmodulation. Die Patientin berichtet über innere Leere, Hoffnungslosigkeit und Interessensverlust. Affekt kongruent zur Stimmung. Keine Affektlabilität oder Affektinkontinenz.</clickable>
+        <clickable data-id="12">Deutlich vermindert. Verlangsamte Bewegungsabläufe und geringe Spontanaktivität. Kein Anzeichen von motorischer Unruhe oder Katatonie.</clickable>
+        <clickable data-id="13">Passive Todeswünsche werden eingeräumt. Keine akuten Suizidgedanken oder -absichten zum Untersuchungszeitpunkt. Sicherheit durch engmaschige Kontrolle gewährleistet.</clickable>
+        <clickable data-id="14">Nicht gegeben. Keine Hinweise auf fremdaggressives Verhalten oder Impulsdurchbrüche.</clickable>
+        <clickable data-id="15">Diffuse Ängste in Bezug auf die eigene Zukunft und finanzielle Lage. Keine Panikattacken, keine phobischen Vermeidungstendenzen.</clickable>
+        <clickable data-id="16">Nicht vorhanden.</clickable>
+        <clickable data-id="17">Deutliches Morgentief, frühes Erwachen mit Grübelneigung. Schlaf insgesamt nicht erholsam.</clickable>
+        <clickable data-id="18">Realitätsprüfung intakt. Die Patientin zeigt eine teilweise Krankheitseinsicht und erkennt depressive Symptome an, neigt jedoch zur Selbstabwertung.</clickable>
+      </p>
+    </div>
   </div>
 
   <!-- Modal -->
